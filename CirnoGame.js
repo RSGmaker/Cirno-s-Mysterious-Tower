@@ -656,7 +656,7 @@ Bridge.assembly("CirnoGame", function ($asm, globals) {
                     this._frameRendered = false;
                     this._gameRendered = false;
                     this.GameName = "Cirno's Mysterious Tower";
-                    this.GameVersion = "0.1";
+                    this.GameVersion = "0.1b";
                     this.DEBUG = false;
                 }
             },
@@ -5730,7 +5730,7 @@ Bridge.assembly("CirnoGame", function ($asm, globals) {
                     var color = "#FFFFFF";
                     var picker = null;
                     while (ok) {
-                        var common = System.Array.init(["point", "point", "point", "point", "point", "point", "heart", "heart", "tripleheart", "doubleorb"], System.String);
+                        var common = System.Array.init(["point", "point", "point", "point", "point", "point", "heart", "heart", "tripleheart", "singleorb"], System.String);
                         var rare = System.Array.init(["attackpower", "defensepower", "mining"], System.String);
                         var legendary = System.Array.init(["triplejump", "cheaperblocks", "invincibility"], System.String);
 
@@ -5740,13 +5740,13 @@ Bridge.assembly("CirnoGame", function ($asm, globals) {
                         var C;
 
                         if (picker == null || Math.random() < 0.2) {
-                            if (R < 0.75) {
+                            if (R < 0.70) {
                                 picker = common;
                                 S = "common";
                                 color = "#FFFFFF";
                             } else {
                                 R = Math.random();
-                                if (R < 0.85) {
+                                if (R < 0.90) {
                                     picker = rare;
                                     S = "rare";
                                     //color = "#FF9922";
@@ -5814,7 +5814,7 @@ Bridge.assembly("CirnoGame", function ($asm, globals) {
                                 this.Game.AddEntity(H1);
                                 M = "Heal x3";
                                 break;
-                            case "doubleorb": 
+                            case "singleorb": 
                                 if (this.Game.timeRemaining > 0) {
                                     ok = true;
                                     break;
@@ -5825,13 +5825,13 @@ Bridge.assembly("CirnoGame", function ($asm, globals) {
                                 CI.Hspeed = -2.0;
                                 CI.collectionDelay = 30;
                                 this.Game.AddEntity(CI);
-                                CI = new CirnoGame.Orb(this.Game);
+                                /*CI = new CirnoGame.Orb(this.Game);
                                 CI.Position.CopyFrom(this.Position);
                                 CI.Vspeed = -2.0;
                                 CI.Hspeed = 2.0;
                                 CI.collectionDelay = 30;
-                                this.Game.AddEntity(CI);
-                                M = "Double Orb";
+                                this.Game.AddEntity(CI);*/
+                                M = "Orb";
                                 break;
                             case "mining": 
                                 if (player.digpower < 2.0) {
@@ -6939,7 +6939,7 @@ Bridge.assembly("CirnoGame", function ($asm, globals) {
                 this.Controls = new CirnoGame.TextSprite();
                 this.Controls.FontSize = Bridge.Int.clip32(this.spriteBuffer.width * 0.025);
                 this.Controls.TextColor = "#FFFFFF";
-                this.Controls.Text = "Controls:\nLeft/Right=Move\nUp/Down=Aim(Up activates chests/doors)\nZ=Shoot\nX=Jump/Mid-air jump\nA=Place block below you(costs time)";
+                this.Controls.Text = "Controls:\nLeft/Right=Move\nUp/Down=Aim(Up activates chests/doors)\nZ=Shoot\nX=Jump/Mid-air jump\nA=Place block below you(costs time)\nEnter=Pause\nM=Toggle mute";
                 this.Controls.ShadowColor = "#000000";
                 this.Controls.ShadowOffset = new CirnoGame.Vector2(2, 2);
                 this.Controls.ShadowBlur = 2;
@@ -7268,10 +7268,10 @@ Bridge.assembly("CirnoGame", function ($asm, globals) {
                 this.TM.ApplyBreakable();
 
 
-
+				var ghosts = Math.min(18+this.level*2,28);
                 var i = 0;
                 //while (i < 110)
-                while (i < 24) {
+                while (i < ghosts) {
                     this.PlaceAndAddEntity(new CirnoGame.MRGhosty(this));
                     i = (i + 1) | 0;
                 }
@@ -7286,7 +7286,7 @@ Bridge.assembly("CirnoGame", function ($asm, globals) {
                     this.PlaceAndAddEntity(new CirnoGame.KeyItem(this));
                 }
                 i = 0;
-                while (Bridge.identity(i, (i = (i + 1) | 0)) <= 2) {
+                while (Bridge.identity(i, (i = (i + 1) | 0)) <= 1) {
                     this.PlaceAndAddEntity(new CirnoGame.HealingItem(this));
                 }
 
@@ -8296,7 +8296,7 @@ Bridge.assembly("CirnoGame", function ($asm, globals) {
         methods: {
             onCollected: function (player) {
                 //throw new NotImplementedException();
-                var time = 25000;
+                var time = 20000;
                 if (this.Game.timeRemaining > 0) {
                     this.Game.timeRemaining += time;
                     this.Game.timeRemaining = Math.min(this.Game.maxTimeRemaining, this.Game.timeRemaining);
@@ -8358,7 +8358,7 @@ Bridge.assembly("CirnoGame", function ($asm, globals) {
             },
             touchDamage: {
                 get: function () {
-                    return 2;
+                    return this.attackpower*1.5;
                 }
             }
         },
@@ -8393,11 +8393,12 @@ Bridge.assembly("CirnoGame", function ($asm, globals) {
                 this.AddBehavior(new CirnoGame.FlightControls(this));
                 this.AddBehavior(new CirnoGame.RandomAI(this));
                 //AddBehavior(new AimedShooter(this));
-                this.attackpower = 1 + (this.Game.level * 0.334);
-                this.defensepower = 1 + (this.Game.level * 0.334);
+                this.attackpower = 1 + (this.Game.level * 0.5);
+                this.defensepower = 1 + (this.Game.level * 0.5);
                 if (this.Game.playing) {
                     this.AddBehavior$1(CirnoGame.AimedShooter);
                     this.GetBehavior(CirnoGame.AimedShooter).attackpower = this.attackpower;
+					this.GetBehavior(CirnoGame.AimedShooter).maxtime = Math.max(480 - (this.Game.level * 10),380);
                 }
                 //GetBehavior<FlightControls>().maxSpeed *= 0.75f;
                 this.GetBehavior(CirnoGame.FlightControls).maxSpeed *= 0.5;
@@ -8445,10 +8446,17 @@ Bridge.assembly("CirnoGame", function ($asm, globals) {
             onDeath: function (source) {
                 //throw new NotImplementedException();
                 this.Alive = false;
-                var P = new CirnoGame.PointItem(this.Game);
+				var P = new CirnoGame.PointItem(this.Game);
                 P.Position.CopyFrom(this.Position);
                 P.collectionDelay = (Bridge.Int.div(P.collectionDelay, 2)) | 0;
                 this.Game.AddEntity(P);
+				if (Math.random() < 0.13) {
+					P = new CirnoGame.HealingItem(this.Game);
+					P.Position.CopyFrom(this.Position);
+					P.Vspeed = -2;
+					P.collectionDelay = (Bridge.Int.div(P.collectionDelay, 2)) | 0;
+					this.Game.AddEntity(P);
+				}
             },
             onKill: function (combatant) {
                 //throw new NotImplementedException();
