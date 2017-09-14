@@ -67,7 +67,7 @@ namespace CirnoGame
             Controls = new TextSprite();
             Controls.FontSize = (int)(spriteBuffer.Width * 0.025f);
             Controls.TextColor = "#FFFFFF";
-            Controls.Text = "Controls:\nLeft/Right=Move\nUp/Down=Aim(Up activates chests/doors)\nZ=Shoot\nX=Jump/Mid-air jump\nA=Place block below you(costs time)";
+            Controls.Text = "Controls:\nLeft/Right=Move\nUp/Down=Aim(Up activates chests/doors)\nZ=Shoot\nX=Jump/Mid-air jump\nA=Place block below you(costs time)\nEnter=Pause\nM=Toggle mute";
             Controls.ShadowColor = "#000000";
             Controls.ShadowOffset = new Vector2(2, 2);
             Controls.ShadowBlur = 2;

@@ -224,10 +224,10 @@ namespace CirnoGame
             TM.ApplyBreakable();
 
 
-
+            var ghosts = Math.Min(18 + level * 2, 28);
             var i = 0;
             //while (i < 110)
-            while (i < 24)
+            while (i < ghosts)
             {
                 PlaceAndAddEntity(new MRGhosty(this));
                 i++;
@@ -243,7 +243,7 @@ namespace CirnoGame
                 PlaceAndAddEntity(new KeyItem(this));
             }
             i = 0;
-            while (i++ <= 2)
+            while (i++ <= 1)
             {
                 PlaceAndAddEntity(new HealingItem(this));
             }

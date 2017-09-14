@@ -53,7 +53,7 @@ namespace CirnoGame
                 string[] picker = null;
                 while (ok)
                 {
-                    var common = new string[] { "point", "point", "point", "point", "point", "point", "heart", "heart", "tripleheart", "doubleorb" };
+                    var common = new string[] { "point", "point", "point", "point", "point", "point", "heart", "heart", "tripleheart", "singleorb" };
                     var rare = new string[] { "attackpower", "defensepower", "mining" };
                     var legendary = new string[] { "triplejump", "cheaperblocks", "invincibility" };
 
@@ -64,7 +64,7 @@ namespace CirnoGame
 
                     if (picker == null || Math.Random() < 0.2)
                     {
-                        if (R < 0.75)
+                        if (R < 0.70)
                         {
                             picker = common;
                             S = "common";
@@ -73,7 +73,7 @@ namespace CirnoGame
                         else
                         {
                             R = Math.Random();
-                            if (R < 0.85)
+                            if (R < 0.90)
                             {
                                 picker = rare;
                                 S = "rare";
@@ -153,7 +153,7 @@ namespace CirnoGame
                             Game.AddEntity(H1);
                             M = "Heal x3";
                             break;
-                        case "doubleorb":
+                        case "singleorb":
                             if (Game.timeRemaining > 0)
                             {
                                 ok = true;
@@ -166,14 +166,14 @@ namespace CirnoGame
                             CI.collectionDelay = 30;
                             Game.AddEntity(CI);
 
-                            CI = new Orb(Game);
+                            /*CI = new Orb(Game);
                             CI.Position.CopyFrom(Position);
                             CI.Vspeed = -2f;
                             CI.Hspeed = 2f;
                             CI.collectionDelay = 30;
-                            Game.AddEntity(CI);
+                            Game.AddEntity(CI);*/
 
-                            M = "Double Orb";
+                            M = "Orb";
                             break;
                         case "mining":
                             if (player.digpower < 2.0f)

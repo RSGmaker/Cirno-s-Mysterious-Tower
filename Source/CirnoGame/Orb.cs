@@ -16,7 +16,7 @@ namespace CirnoGame
         public override void onCollected(PlayerCharacter player)
         {
             //throw new NotImplementedException();
-            var time = (1000) * 25;
+            var time = (1000) * 20;
             if (Game.timeRemaining > 0)
             {
                 Game.timeRemaining += time;

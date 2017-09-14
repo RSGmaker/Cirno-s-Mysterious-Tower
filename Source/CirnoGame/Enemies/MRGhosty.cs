@@ -50,7 +50,7 @@ namespace CirnoGame
         {
             get
             {
-                return 2;
+                return attackpower*1.5f;
             }
         }
         public float attackpower = 1;
@@ -67,12 +67,13 @@ namespace CirnoGame
             AddBehavior(new FlightControls(this));
             AddBehavior(new RandomAI(this));
             //AddBehavior(new AimedShooter(this));
-            attackpower = 1 + (Game.level * 0.334f);
-            defensepower = 1 + (Game.level * 0.334f);
+            attackpower = 1 + (Game.level * 0.5f);
+            defensepower = 1 + (Game.level * 0.5f);
             if (Game.playing)
             {
                 AddBehavior<AimedShooter>();
                 GetBehavior<AimedShooter>().attackpower = attackpower;
+                GetBehavior<AimedShooter>().maxtime = Math.Max(480 - (Game.level * 10), 380);
             }
             //GetBehavior<FlightControls>().maxSpeed *= 0.75f;
             GetBehavior<FlightControls>().maxSpeed *= 0.5f;
@@ -128,10 +129,18 @@ namespace CirnoGame
         {
             //throw new NotImplementedException();
             Alive = false;
-            var P = new PointItem(Game);
+            CollectableItem P = new PointItem(Game);
             P.Position.CopyFrom(Position);
             P.collectionDelay /= 2;
             Game.AddEntity(P);
+            if (Math.Random() < 0.13)
+            {
+                P = new HealingItem(Game);
+                P.Position.CopyFrom(Position);
+                P.Vspeed = -2;
+                P.collectionDelay /= 2;
+                this.Game.AddEntity(P);
+             }
         }
 
         public void onKill(ICombatant combatant)
