@@ -41,16 +41,14 @@ namespace CirnoGame
 
         public static List<GameMode> GetGameModesOfType(ModeTypes type)
         {
-            return new List<GameMode>(System.Linq.Enumerable.Where<global::CirnoGame.GameMode>(gameModes, (global::System.Func<global::CirnoGame.GameMode, bool>)(G => G.ModeType == type)));
+            return new List<GameMode>(gameModes.Where(G => G.ModeType == type));
         }
 
         public static GameMode GetGameModeByName(string name)
         {
-            var ret = new List<GameMode>(System.Linq.Enumerable.Where<global::CirnoGame.GameMode>(gameModes, (global::System.Func<global::CirnoGame.GameMode, bool>)(G => G.Name == name)));
+            var ret = new List<GameMode>(gameModes.Where(G => G.Name == name));
             if (ret.Count > 0)
-            {
                 return ret[0];
-            }
             return null;
         }
 

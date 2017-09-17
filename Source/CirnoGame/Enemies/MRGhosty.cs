@@ -59,14 +59,8 @@ namespace CirnoGame
         public MRGhosty(Game game) : base(game)
         {
             ChangeAni("");
-            /*Ani.HueColor = "#FF0000";
-            Ani.HueRecolorStrength = 1.0f;
-            Ani.Shadow = 2;
-            Ani.Shadowcolor = Ani.HueColor;*/
-            //Ani.Shadowcolor = "#FF0000";
             AddBehavior(new FlightControls(this));
             AddBehavior(new RandomAI(this));
-            //AddBehavior(new AimedShooter(this));
             attackpower = 1 + (Game.level * 0.5f);
             defensepower = 1 + (Game.level * 0.5f);
             if (Game.playing)
@@ -75,11 +69,7 @@ namespace CirnoGame
                 GetBehavior<AimedShooter>().attackpower = attackpower;
                 GetBehavior<AimedShooter>().maxtime = Math.Max(480 - (Game.level * 10), 380);
             }
-            //GetBehavior<FlightControls>().maxSpeed *= 0.75f;
             GetBehavior<FlightControls>().maxSpeed *= 0.5f;
-
-
-
 
             GravityEnabled = false;
             Team = 2;
@@ -88,11 +78,8 @@ namespace CirnoGame
         public override void Update()
         {
             base.Update();
-            Ani.Flipped = !(Hspeed < 0);//sprite needs to be edited to face the right way...
+            Ani.Flipped = (Hspeed < 0);
             Ani.ImageSpeed = (float)((Math.Abs(Hspeed) + Math.Abs(Vspeed)) * 0.125);
-
-            //Ani.Shadow = Ani.Shadow==0 ? 2 : 0;
-
         }
 
         public void ChangeAni(string animation, bool reset = false)
@@ -133,7 +120,7 @@ namespace CirnoGame
             P.Position.CopyFrom(Position);
             P.collectionDelay /= 2;
             Game.AddEntity(P);
-            if (Math.Random() < 0.13)
+            if (Math.Random() < 0.15)
             {
                 P = new HealingItem(Game);
                 P.Position.CopyFrom(Position);

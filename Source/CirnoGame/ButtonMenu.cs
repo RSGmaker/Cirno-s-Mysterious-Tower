@@ -60,12 +60,12 @@ namespace CirnoGame
         public List<ButtonSprite> GetAllButtons()
         {
             List<ButtonSprite> all = new List<ButtonSprite>();
-            rows.ForEach((global::System.Action<global::System.Collections.Generic.List<global::CirnoGame.ButtonSprite>>)(R => all.AddRange(R)));
+            rows.ForEach(R => all.AddRange(R));
             return all;
         }
         public ButtonSprite GetSpriteByData(dynamic data)
         {
-            List<ButtonSprite> all = new List<ButtonSprite>(System.Linq.Enumerable.Where<global::CirnoGame.ButtonSprite>(GetAllButtons(), (global::System.Func<global::CirnoGame.ButtonSprite, bool>)(B => B.Data == data)));
+            List<ButtonSprite> all = new List<ButtonSprite>(GetAllButtons().Where(B => B.Data == data));
             if (all.Count > 0)
             {
                 return all[0];
@@ -74,7 +74,7 @@ namespace CirnoGame
         }
         public void AddButtons(string[] buttonText)
         {
-            CirnoGame.HelperExtensions.ForEach<string>(buttonText, (global::System.Action<string>)(T => AddButton((string)T)));
+            buttonText.ForEach(T => AddButton((string)T));
         }
         public ButtonSprite AddButton(string buttonText, int row = -1, dynamic data = null)
         {
@@ -134,7 +134,7 @@ namespace CirnoGame
         public void CombineRows()
         {
             List<ButtonSprite> all = new List<ButtonSprite>();
-            rows.ForEach((global::System.Action<global::System.Collections.Generic.List<global::CirnoGame.ButtonSprite>>)(R => all.AddRange(R)));
+            rows.ForEach(R => all.AddRange(R));
 
             rows = new List<List<ButtonSprite>>();
             rows.Add(all);
@@ -226,12 +226,12 @@ namespace CirnoGame
             }
             if (clicked)
             {
-                rows.ForEach((global::System.Action<global::System.Collections.Generic.List<global::CirnoGame.ButtonSprite>>)(R => R.ForEach((global::System.Action<global::CirnoGame.ButtonSprite>)(B => { if (B != null) B.CheckClick(mousePosition); }))));
+                rows.ForEach(R => R.ForEach(B => { if (B != null) B.CheckClick(mousePosition); }));
             }
         }
         public void Draw(CanvasRenderingContext2D g)
         {
-            rows.ForEach((global::System.Action<global::System.Collections.Generic.List<global::CirnoGame.ButtonSprite>>)(R => R.ForEach((global::System.Action<global::CirnoGame.ButtonSprite>)(B => { if (B != null) B.Draw(g); }))));
+            rows.ForEach(R => R.ForEach(B => { if (B != null) B.Draw(g); }));
         }
     }
 }

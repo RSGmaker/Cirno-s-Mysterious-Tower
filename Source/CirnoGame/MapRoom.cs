@@ -14,12 +14,15 @@ namespace CirnoGame
         public int EY;
 
         public bool placed = false;
+        public bool secret = false;
 
         //public Point[] Exits;
         public List<MapRoom> ExitRooms = new List<MapRoom>();//connected rooms
 
         public static List<MapRoom> PlacedRooms = new List<MapRoom>();
+        public static List<MapRoom> OpenRooms = new List<MapRoom>();
         public MapRoom parent;
+        public Chest[] goldchests = new Chest[0];
 
         public Game game;
         public bool IsValid()
@@ -119,13 +122,31 @@ namespace CirnoGame
         {
             var L = new List<MapRoom>();
             var i = 0;
-            while (i < PlacedRooms.Count)
+            var ln = OpenRooms.Count;
+            while (i < ln)
             {
-                var P = PlacedRooms[i];
-                L.AddRange(System.Linq.Enumerable.Where<global::CirnoGame.MapRoom>(P.ExitRooms, (global::System.Func<global::CirnoGame.MapRoom, bool>)(F => F.CanBePlaced() && !F.placed)));
+                var P = OpenRooms[i];
+                L.AddRange(P.ExitRooms.Where((F => F.CanBePlaced() && !F.placed)));
                 i++;
             }
             return L;
+        }
+        public bool ContainsTile(int X,int Y)
+        {
+            return X >= SX && Y >= SY && X < EX && Y < EY;
+        }
+        public bool ContainsPosition(Vector2 V)
+        {
+            int X = (int)((V.X - game.TM.position.X) / game.TM.tilesize);
+            int Y = (int)((V.Y - game.TM.position.Y) / game.TM.tilesize);
+            return X >= SX && Y >= SY && X < EX && Y < EY;
+        }
+        public static MapRoom FindRoom(Vector2 V)
+        {
+            var L = OpenRooms.Where(R => R.ContainsPosition(V)).ToArray();
+            if (L.Length > 0)
+                return L[0];
+            return null;
         }
         /// <summary>
         /// clears out the room's area, and attempts to generate exitrooms.
@@ -147,13 +168,113 @@ namespace CirnoGame
             {
                 if (parent != null)
                 {
-                    if (CirnoGame.HelperExtensions.ContainsB<global::CirnoGame.MapRoom>(parent.ExitRooms, this))
+                    if (parent.ExitRooms.ContainsB(this))
                     {
                         parent.ExitRooms.Remove(this);
                     }
                 }
             }
             return false;
+        }
+        void GenerateGoldChests()
+        {
+            var locked = !OpenRooms.Contains(this);
+
+            var V = FindEmptySpot();
+            var chest = new Chest(game);
+            goldchests.Push(chest);
+            chest.ForceLocked = locked;
+            chest.Position.CopyFrom(V);
+            chest.Goldify();
+            game.AddEntity(chest);
+
+            Vector2 V2 = FindEmptySpot();
+            var attempts = 0;
+            while (attempts++ < 5 && (V2 == null || Math.Abs(V2.X - V.X) < 16)) { V2 = FindEmptySpot(); }
+
+            if (V2 != null && Math.Abs(V2.X - V.X) > 16)
+            {
+                chest = new Chest(game);
+                goldchests.Push(chest);
+                chest.Position.CopyFrom(V2);
+                chest.ForceLocked = locked;
+                chest.Goldify();
+                game.AddEntity(chest);
+            }
+        }
+        public void NMakeSecret()//broken
+        {
+            var TM = game.TM;
+            var W = EX - SX;
+            var H = EY - SY;
+            //TM.FillRect(SX, SY, W, H);
+            //ClearRoom();
+            ///TM.ClearRect(SX, SY, W, H);
+            TM.DrawRect(SX, SY, W, H);
+            TM.SetBreakableRect(SX, SY, W, H, false);
+            TM.ClearRect(SX + 1, SY + 1, W - 2, H - 2);
+
+            ///TM._GenRect(SX, SY, EX, EY);
+            ////TM.SetBreakableRect(SX + 1, SY + 1, W - 2, H - 2, true);
+            if (OpenRooms.Contains(this))
+            {
+                OpenRooms.Remove(this);
+            }
+            secret = true;
+
+            GenerateGoldChests();
+            
+            ForceRedraw();
+        }
+        public void MakeSecret()
+        {
+            var TM = game.TM;
+            var W = EX - SX;
+            var H = EY - SY;
+            TM.FillRect(SX, SY, W, H);
+            TM.SetBreakableRect(SX, SY, W, H,false);
+            TM.SetBreakableRect(SX+1, SY+1, W-2, H-2, true);
+            if (OpenRooms.Contains(this))
+            {
+                OpenRooms.Remove(this);
+            }
+            secret = true;
+        }
+        public void NUnleashSecret()//broken
+        {
+            var TM = game.TM;
+
+            TM.ClearOuterRect(SX, SY, (EX - SX), (EY - SY), false);
+            //TM.ClearRect(SX+1, SY+1, (EX - SX)-2, (EY - SY)-2);
+            //TM._GenRect(SX, SY, EX, EY);
+
+            OpenRooms.Add(this);
+            goldchests.ForEach(C => C.ForceLocked = false);
+
+            ForceRedraw();
+        }
+        public void UnleashSecret()
+        {
+            var TM = game.TM;
+
+            TM.ClearRect(SX + 1, SY + 1, (EX - SX) - 2, (EY - SY) - 2);
+            TM._GenRect(SX, SY, EX, EY);
+
+            OpenRooms.Add(this);
+
+            GenerateGoldChests();
+            ForceRedraw();
+        }
+        public void ClearRoom()
+        {
+            var TM = game.TM;
+
+            TM.ClearRect(SX, SY, EX - SX, EY - SY);
+        }
+        public void GeneratePlatforms()
+        {
+            var TM = game.TM;
+            TM._GenRect(SX, SY, EX, EY);
         }
         private void Place()
         {
@@ -162,16 +283,33 @@ namespace CirnoGame
             TM._GenRect(SX, SY, EX, EY);
 
             PlacedRooms.Add(this);
+            OpenRooms.Add(this);
             placed = true;
+        }
+        public void ApplyBreakable()
+        {
+            var TM = game.TM;
+            TM.ApplyBreakableRect(SX - 2, SY - 2, (EX - SX) + 4, (EY - SY) + 4);
+        }
+        public void ForceRedraw()
+        {
+            var TM = game.TM;
+            var X = SX - 2;
+            var Y = SY - 2;
+            var W = (EX - SX)+4;
+            var H = (EY - SY)+4;
+            TM.bg.ClearRect((int)TM.tilesize * X, (int)TM.tilesize * Y, (int)TM.tilesize * W, (int)TM.tilesize * H);
+
+            TM.Redraw(TM.bg, X, Y, W, H);
         }
         public static Vector2 FindAnyEmptySpot()
         {
-            if (PlacedRooms.Count < 1)
+            if (OpenRooms.Count < 1)
                 return null;
             var i = 0;
             while (i < 10)
             {
-                var ret = CirnoGame.HelperExtensions.Pick<global::CirnoGame.MapRoom>(PlacedRooms, RNG).FindEmptySpot();
+                var ret = OpenRooms.Pick(RNG).FindEmptySpot();
                 if (ret != null)
                     return ret;
                 i++;

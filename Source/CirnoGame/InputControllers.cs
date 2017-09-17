@@ -173,12 +173,12 @@ namespace CirnoGame
         {
             InputMap ret = new InputMap();
             List<GamePad> L = GamePadManager._this.activeGamepads;
-            L.ForEach((global::System.Action<global::CirnoGame.GamePad>)(G =>
+            L.ForEach(G =>
             {
                 if (ret.map == -1)
                 {
                     ret.controllerID = G.id;
-                    GamePadButton[] GB = System.Linq.Enumerable.Where<global::CirnoGame.GamePadButton>(G.buttons, (global::System.Func<global::CirnoGame.GamePadButton, bool>)(B => B.pressed)).ToArray();
+                    GamePadButton[] GB = G.buttons.Where(B => B.pressed).ToArray();
                     if (GB.Length > 0)
                     {
                         ret.axis = false;
@@ -205,7 +205,7 @@ namespace CirnoGame
                     }
                 }
             }
-));
+                );
             if (ret.map != -1)
             {
                 return ret;

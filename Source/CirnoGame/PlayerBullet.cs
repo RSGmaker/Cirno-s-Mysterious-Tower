@@ -152,11 +152,18 @@ namespace CirnoGame
             }
             if (T != null && T.enabled && T.solid)
             {
-                if (T.Breakable && attacksterrain)
+                if (attacksterrain)
                 {
-                    //T.Damage(_touchDamage * digpower);
-                    PlaySound("hit");
-                    T.Damage(digpower);
+                    if (T.Breakable)
+                    {
+                        //T.Damage(_touchDamage * digpower);
+                        if (T.Damage(digpower))
+                            PlaySound("thunk4");
+                        else
+                            PlaySound("thunk");
+                    }
+                    else
+                        PlaySound("plink");
                 }
                 Alive = false;
             }

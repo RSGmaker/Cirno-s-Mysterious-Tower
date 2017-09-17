@@ -87,17 +87,11 @@ namespace CirnoGame
         public void StopAllFromDirectory(string directory)
         {
             directory = Directory + directory;
-            CirnoGame.HelperExtensions.ForEach<global::CirnoGame.Audio>(            /*int i = 0;
-            data[""].ID*/
-                                                                                    //data.ForEach(A => { if (A.ID)})
-                        data.Values, (global::System.Action<global::CirnoGame.Audio>)(A => { if (A.ID.StartsWith(directory)) { A.Stop(); } }));
+            data.Values.ForEach(A => { if (A.ID.StartsWith(directory)) { A.Stop(); } });
         }
         public void StopAll()
         {
-            CirnoGame.HelperExtensions.ForEach<global::CirnoGame.Audio>(            /*int i = 0;
-            data[""].ID*/
-                                                                                    //data.ForEach(A => { if (A.ID)})
-                        data.Values, (global::System.Action<global::CirnoGame.Audio>)(A => { A.Stop(); }));
+            data.Values.ForEach(A => { A.Stop(); });
         }
     }
 }

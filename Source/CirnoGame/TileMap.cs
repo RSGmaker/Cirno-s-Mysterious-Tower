@@ -21,7 +21,7 @@ namespace CirnoGame
         public Game game;
 
         protected HTMLCanvasElement buffer;
-        protected CanvasRenderingContext2D bg;
+        public CanvasRenderingContext2D bg;
 
         /// <summary>
         /// returns true if the rectangle has no empty spaces.
@@ -361,7 +361,8 @@ namespace CirnoGame
                                 //}else if (RND.NextDouble() < 0.025)
                             }
                             //else if (RND.NextDouble() < 0.035)
-                            else if (RND.NextDouble() < 0.04)
+                            //else if (RND.NextDouble() < 0.04)
+                            else if (RND.NextDouble() < 0.045)
                             {
                                 T.enabled = true;
                                 T.topSolid = T.enabled;
@@ -382,6 +383,98 @@ namespace CirnoGame
                 }
                 column = SX;
                 row++;
+            }
+        }
+        public void SetBreakableRect(int column, int row, int Width, int Height,bool breakable)
+        {
+            var SX = (int)(column);
+            var SY = (int)(row);
+            var EX = (int)(SX + Width);
+            var EY = (int)(SY + Height);
+            SX = (int)MathHelper.Clamp(SX, 0, columns - 1);
+            SY = (int)MathHelper.Clamp(SY, 0, rows - 1);
+            EX = (int)MathHelper.Clamp(EX, 0, columns - 1);
+            EY = (int)MathHelper.Clamp(EY, 0, rows - 1);
+            var X = SX;
+            var Y = SY;
+            TileData T = new TileData();
+            T.row = Y;
+            T.column = X;
+            T.texture = 1;
+            T.enabled = true;
+            T.visible = true;
+            T.map = this;
+            T.solid = true;
+            if (breakable)
+            {
+                T.texture = 1;
+                if (Math.Random() < 0.02)
+                {
+                    T.texture = Math.Random() < 0.5 ? 5 : 6;
+                }
+                T.Breakable = true;
+            }
+            else
+            {
+                T.texture = 0;
+                T.Breakable = false;
+            }
+            while (Y < EY)
+            {
+                X = SX;
+                while (X < EX)
+                {
+                    /*var TT = T.Clone();
+                    TT.column = X;
+                    TT.row = Y;
+                    data[X, Y] = TT;*/
+                    var TT = data[X, Y];
+                    if (TT == null)
+                    {
+                        TT = T.Clone();
+                    }
+                    if (T.solid)
+                    {
+                        TT.texture = T.texture;
+                        TT.Breakable = T.Breakable;
+                    }
+                    X++;
+                }
+                Y++;
+            }
+        }
+        public void FillRect(int column, int row, int Width, int Height)
+        {
+            var SX = (int)(column);
+            var SY = (int)(row);
+            var EX = (int)(SX + Width);
+            var EY = (int)(SY + Height);
+            SX = (int)MathHelper.Clamp(SX, 0, columns - 1);
+            SY = (int)MathHelper.Clamp(SY, 0, rows - 1);
+            EX = (int)MathHelper.Clamp(EX, 0, columns - 1);
+            EY = (int)MathHelper.Clamp(EY, 0, rows - 1);
+            var X = SX;
+            var Y = SY;
+            TileData T = new TileData();
+            T.row = Y;
+            T.column = X;
+            T.texture = 1;
+            T.enabled = true;
+            T.visible = true;
+            T.map = this;
+            T.solid = true;
+            while (Y < EY)
+            {
+                X = SX;
+                while (X < EX)
+                {
+                    var TT = T.Clone();
+                    TT.column = X;
+                    TT.row = Y;
+                    data[X, Y] = TT;
+                    X++;
+                }
+                Y++;
             }
         }
         public void DrawRect(int column, int row, int Width, int Height)
@@ -477,6 +570,67 @@ namespace CirnoGame
                 Y++;
             }
         }
+        public void ClearOuterRect(int column, int row, int width, int height,bool bottom=true)
+        {
+            var SX = (int)(column);
+            var SY = (int)(row);
+            var EX = (int)(SX + width);
+            var EY = (int)(SY + height);
+            SX = (int)MathHelper.Clamp(SX, 0, columns - 1);
+            SY = (int)MathHelper.Clamp(SY, 0, rows - 1);
+            EX = (int)MathHelper.Clamp(EX, 0, columns - 1);
+            EY = (int)MathHelper.Clamp(EY, 0, rows - 1);
+            var X = SX;
+            var Y = SY;
+            var T = new TileData();
+            T.map = this;
+            T.visible = false;
+            T.solid = false;
+            var TX = X;
+            var TY = Y;
+            while (TX < EX-1)
+            {
+                var TT = T.Clone();
+                TT.column = TX;
+                TT.row = TY;
+                SetTile(TX, TY, TT);
+                TX++;
+            }
+            TX = X;
+            TY = EY;
+            if (bottom)
+            {
+                while (TX < EX)
+                {
+                    var TT = T.Clone();
+                    TT.column = TX;
+                    TT.row = TY;
+                    SetTile(TX, TY, TT);
+                    TX++;
+                }
+            }
+
+            TX = X;
+            TY = Y;
+            while (TY < EY-1)
+            {
+                var TT = T.Clone();
+                TT.column = TX;
+                TT.row = TY;
+                SetTile(TX, TY, TT);
+                TY++;
+            }
+            TX = EX;
+            TY = Y;
+            while (TY < EY-1)
+            {
+                var TT = T.Clone();
+                TT.column = TX;
+                TT.row = TY;
+                SetTile(TX, TY, TT);
+                TY++;
+            }
+        }
         public void ClearRect(int column, int row, int width, int height)
         {
             var SX = (int)(column);
@@ -493,6 +647,7 @@ namespace CirnoGame
             T.map = this;
             T.visible = false;
             T.solid = false;
+            T.enabled = false;
             while (Y < EY)
             {
                 X = SX;
@@ -654,7 +809,7 @@ namespace CirnoGame
             }
         }
 
-        protected void Redraw(CanvasRenderingContext2D g, int SX = -1, int SY = -1, int W = -1, int H = -1)
+        public void Redraw(CanvasRenderingContext2D g, int SX = -1, int SY = -1, int W = -1, int H = -1)
         {
             float PX = position.X;
             float PY = position.Y;
@@ -691,6 +846,10 @@ namespace CirnoGame
             int column = SX;
             var BG = tiles[2];
             var BG2 = tiles[3];
+            var tilesC = tiles.Count;
+
+            Rectangle R = new Rectangle();
+            var doorroom = MapGenerator.doorroom;
 
             while (row < EY)
             {
@@ -700,7 +859,7 @@ namespace CirnoGame
                     {
                         TileData T = data[column, row];
                         var tex = Math.Min(tiles.Count - 1, T.texture);
-                        if (T.enabled && tex >= 0 && tex < tiles.Count)
+                        if (T.enabled && tex >= 0 && tex < tilesC)
                         {
                             g.DrawImage(tiles[tex], X, Y);
                             if (T.Breakable && T.HP < T.maxHP)
@@ -714,7 +873,7 @@ namespace CirnoGame
                                 //object sg = g;
                                 //Script.Write("sg.globalCompositeOperation = 'destination-out'");
                                 g.GlobalCompositeOperation = CanvasTypes.CanvasCompositeOperationType.DestinationOut;
-                                Rectangle R = T.GetHitbox();
+                                T.GetHitbox2(R);
                                 R.x -= position.X;
                                 R.y -= position.Y;
                                 g.BeginPath();
@@ -737,14 +896,33 @@ namespace CirnoGame
                                 g.Fill();
 
                                 g.GlobalCompositeOperation = CanvasTypes.CanvasCompositeOperationType.DestinationOver;
+                                if (doorroom!=null && doorroom.ContainsTile(column, row))
+                                {
+                                    g.GlobalAlpha = 0.5f;
+                                    g.FillStyle = "#000000";
+                                    //g.FillRect(R.x.ToDynamic(), R.y.ToDynamic(), R.width.ToDynamic(), R.height.ToDynamic());
+                                    g.FillRect(X.ToDynamic(), Y.ToDynamic(), tilesize.ToDynamic(), tilesize.ToDynamic());
+                                    g.GlobalAlpha = 1f;
+                                }
                                 g.DrawImage(BG, X, Y);
                                 g.GlobalCompositeOperation = CanvasTypes.CanvasCompositeOperationType.SourceOver;
+                                
                             }
 
                         }
                         else
                         {
                             g.DrawImage(Math.Random() < 0.98 ? BG : BG2, X, Y);
+                            if (doorroom != null && doorroom.ContainsTile(column, row))
+                            {
+                                /*T.GetHitbox2(R);
+                                R.x -= position.X;
+                                R.y -= position.Y;*/
+                                g.GlobalAlpha = 0.5f;
+                                g.FillStyle = "#000000";
+                                g.FillRect(X.ToDynamic(), Y.ToDynamic(), tilesize.ToDynamic(), tilesize.ToDynamic());
+                                g.GlobalAlpha = 1f;
+                            }
                         }
                     }
                     column++;
@@ -782,6 +960,68 @@ namespace CirnoGame
             }
             return false;
         }
+        public void ApplyBreakableRect(int SX = -1, int SY = -1, int W = -1, int H = -1)
+        {
+            if (SX == -1)
+            {
+                SX = 0;
+            }
+            if (SY == -1)
+            {
+                SY = 0;
+            }
+
+            if (W == -1)
+            {
+                W = columns;
+            }
+            if (H == -1)
+            {
+                H = rows;
+            }
+            var EX = SX + W;
+            var EY = SY + H;
+            SX = (int)MathHelper.Clamp(SX, 0, columns);
+            SY = (int)MathHelper.Clamp(SY, 0, rows);
+
+            EX = (int)MathHelper.Clamp(EX, 0, columns);
+            EY = (int)MathHelper.Clamp(EY, 0, rows);
+            int row = SX;
+            int column = SY;
+
+            while (row < EY)
+            {
+                while (column < EX)
+                {
+                    /*var T = data[column, row];
+                    T.texture = Math.Random() < 0.5 ? 0 : 1;*/
+                    var T = data[column, row];
+                    var TT = T.Clone();
+                    TT.column = column;
+                    TT.row = row;
+                    data[column, row] = TT;
+                    T = TT;
+                    if (IsExposed(column, row))
+                    {
+                        T.texture = 1;
+                        if (Math.Random() < 0.02)
+                        {
+                            T.texture = Math.Random() < 0.5 ? 5 : 6;
+                        }
+                        T.Breakable = true;
+                    }
+                    else
+                    {
+                        T.texture = 0;
+                        T.Breakable = false;
+                    }
+                    column++;
+                }
+                row++;
+                column = SX;
+            }
+            needRedraw = true;
+        }
         public void ApplyBreakable()
         {
             int row = 0;
@@ -813,13 +1053,6 @@ namespace CirnoGame
                         T.texture = 0;
                         T.Breakable = false;
                     }
-                    /*if (!T.enabled || !T.visible)
-                    {
-                        T.enabled = true;
-                        T.solid = false;
-                        T.visible = true;
-                        T.texture = 2;
-                    }*/
                     column++;
                 }
                 row++;

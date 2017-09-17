@@ -12,6 +12,8 @@ namespace CirnoGame
     {
         public PlayerCharacter player;
         public List<Entity> entities;
+        public List<Entity> harmful;
+        public List<Entity> combatants;
         public Camera camera;
         public Rectangle stageBounds;
         public TileMap TM;
@@ -28,6 +30,7 @@ namespace CirnoGame
         public bool paused = false;
         public Vector2 cameraWanderPoint;
         public TitleScreen TS;
+        public bool Teams = true;
 
         public bool running
         {
@@ -45,10 +48,15 @@ namespace CirnoGame
         public ExitDoor Door;
 
         public HTMLImageElement Key;
+        public HTMLImageElement BigKey;
         public Game()
         {
             GamePlaySettings = new GamePlaySettings();
             Door = new ExitDoor(this);
+            entities = new List<Entity>();
+            combatants = new List<Entity>();
+            harmful = new List<Entity>();
+
             player = new PlayerCharacter(this);
             player.HP = 0;
             timeRemaining = defaultTimeRemaining;
@@ -56,7 +64,7 @@ namespace CirnoGame
 
             /*test.Ani = new Animation(AnimationLoader._this.Get("images/cirno/walk"));
             test.Ani.ImageSpeed = 0.1f;*/
-            entities = new List<Entity>();
+            
             //stageBounds = new Rectangle(0, 0, 8000, 3000);
             //stageBounds = new Rectangle(0, 0, 6000, 4000);
             //stageBounds = new Rectangle(0, 0, 2000, 1500);
@@ -123,7 +131,9 @@ namespace CirnoGame
             camera = new Camera(spriteBuffer.Width, spriteBuffer.Height);
             //camera.Scale = 6;
             ///camera.Scale = 5;
-            camera.Scale = 4;
+            //camera.Scale = 4;
+            //camera.Scale = 3.5f;
+            camera.Scale = 3.75f;
 
             //camera.Scale = 1f;
             camera.StageBounds = stageBounds;
@@ -185,6 +195,7 @@ namespace CirnoGame
             ScoreSprite.Position.Y = -ScoreSprite.FontSize / 8;
 
             Key = AnimationLoader.Get("images/items/key")[0];
+            BigKey = AnimationLoader.Get("images/items/bigkey")[0];
 
             TS = new TitleScreen();
             TS.game = this;
@@ -199,11 +210,8 @@ namespace CirnoGame
             while (i < L.Length)
             {
                 var E = L[i];
-                if (E == player || E is ExitDoor)
-                {
-
-                }
-                else
+                //if (!(E == player || E is ExitDoor))
+                if (E.RemovedOnLevelEnd)
                 {
                     E.Alive = false;
                     RemoveEntity(E);
@@ -214,14 +222,15 @@ namespace CirnoGame
         public void StartNextLevel()
         {
             ClearEntities();
+            RoomOpeningLever.TEST = null;
             level += 1;
             var R = stageBounds - TM.position;
             R.width -= TM.tilesize;
             R.height -= TM.tilesize;
             TM.Generate();
             MapGenerator.BoxyGenerate(this);
-            TM.DrawRect(R);
-            TM.ApplyBreakable();
+            //TM.DrawRect(R);
+            //TM.ApplyBreakable();
 
 
             var ghosts = Math.Min(18 + level * 2, 28);
@@ -229,7 +238,7 @@ namespace CirnoGame
             //while (i < 110)
             while (i < ghosts)
             {
-                PlaceAndAddEntity(new MRGhosty(this));
+                PlaceAndAddEnemy(new MRGhosty(this));
                 i++;
             }
             i = 0;
@@ -248,7 +257,19 @@ namespace CirnoGame
                 PlaceAndAddEntity(new HealingItem(this));
             }
 
-            PlaceAndAddEntity(new DoorKey(this));
+            var key = new CirnoGame.DoorKey(this);
+            var attempts = 0;
+
+            this.PlaceAndAddEntity(key);
+            while (Math.Abs(key.x - player.x) < 70 && attempts < 5)
+            {//attempt to prevent key from spawning too close
+                Helper.Log("Door key is too close, repositioning key...");
+
+               key.Position.CopyFrom(MapRoom.FindAnyEmptySpot());
+                attempts += 1;
+            }
+
+            ///PlaceAndAddEntity(new DoorKey(this));
             /*PlaceAndAddEntity(new DoorKey(this));
             PlaceAndAddEntity(new DoorKey(this));
             PlaceAndAddEntity(new DoorKey(this));
@@ -280,6 +301,20 @@ namespace CirnoGame
             E.Position.CopyFrom(MapRoom.FindAnyEmptySpot());
             AddEntity(E);
         }
+        public void PlaceAndAddEnemy(Entity E)
+        {
+            E.Position.CopyFrom(MapRoom.FindAnyEmptySpot());
+            var attempts = 1;
+            while (E.Position.EstimatedDistance(this.player.Position) < 128 && attempts < 5)
+            {
+                Helper.Log("Enemy spawned too close, repositioning enemy...");
+
+                 E.Position.CopyFrom(MapRoom.FindAnyEmptySpot());
+                attempts += 1;
+            }
+            this.AddEntity(E);
+            AddEntity(E);
+        }
         public static string GetTeamColor(int team)
         {
             if (team == 1)
@@ -297,14 +332,18 @@ namespace CirnoGame
             return "#000000";
         }
         public bool muted = false;
+        bool lastPauseButtonState = false;
         public override void Update()
         {
             base.Update();
-            if (playing && KeyboardManager._this.TappedButtons.Contains(13))
+            Teams = GamePlaySettings.GameMode.Teams;
+            //if (playing && KeyboardManager._this.TappedButtons.Contains(13))
+            if (playing && App.IC.getPressed(5) && !lastPauseButtonState)
             {
                 paused = !paused;
-                KeyboardManager._this.TappedButtons.Remove(13);
+                ///KeyboardManager._this.TappedButtons.Remove(13);
             }
+            lastPauseButtonState = App.IC.getPressed(5);
             if (playing && KeyboardManager._this.TappedButtons.Contains(77))
             {
                 AudioManager._this.StopAll();
@@ -339,14 +378,18 @@ namespace CirnoGame
                 if (playing && player.y < 0)
                 {
                     //player glitched out somehow make a new level.
-                    level--;
-                    StartNextLevel();
+                    LevelRestart();
                 }
             }
             else
             {
                 TimerSprite.Text = "Paused";
             }
+        }
+        public void LevelRestart()
+        {
+            level--;
+            StartNextLevel();
         }
         public void DoGameOver()
         {
@@ -369,7 +412,7 @@ namespace CirnoGame
                 TimerSprite.Text = "Paused";
                 return;
             }
-            if (timeRemaining < 0)
+            if (timeRemaining <= 0)
             {
                 timeRemaining = 0;
                 TimerSprite.Text = "0";
@@ -404,6 +447,11 @@ namespace CirnoGame
                 }
             }
             S = S + RestrictLength(prefix + Math.Max(0, seconds), 4);
+            if (totalseconds >= 60)
+            {
+                if (S.IndexOf(".") >= 0)
+                    S = S.Split(".")[0];
+            }
             TimerSprite.Text = S;
         }
         public string RestrictLength(string s, int length)
@@ -418,17 +466,20 @@ namespace CirnoGame
         {
             //List<Entity> combatants = new List<Entity>(System.Linq.Enumerable.Where<global::CirnoGame.Entity>(entities, (global::System.Func<global::CirnoGame.Entity, bool>)(entity => entity is ICombatant && entity.Ani.CurrentImage != null && ((ICombatant)entity).HP > 0)));
             //List<Entity> harmfulEntity = new List<Entity>(System.Linq.Enumerable.Where<global::CirnoGame.Entity>(entities, (global::System.Func<global::CirnoGame.Entity, bool>)(entity => entity is IHarmfulEntity && entity.Ani.CurrentImage != null)));
-            List<Entity> combatants = new List<Entity>(entities.Where(entity => entity is ICombatant && entity.Ani.CurrentImage != null && ((ICombatant)entity).HP > 0));
-            List<Entity> harmfulEntity = new List<Entity>(entities.Where(entity => entity is IHarmfulEntity && entity.Ani.CurrentImage != null));
+            ///List<Entity> combatants = new List<Entity>(entities.Where(entity => entity is ICombatant && entity.Ani.CurrentImage != null && ((ICombatant)entity).HP > 0));
+            ///List<Entity> harmfulEntity = new List<Entity>(entities.Where(entity => entity is IHarmfulEntity && entity.Ani.CurrentImage != null));
+            List<Entity> combatants = new List<Entity>(this.combatants.Where(entity => entity.Ani.CurrentImage != null && (entity.As<ICombatant>()).HP > 0));
+            List<Entity> harmfulEntity = new List<Entity>(harmful.Where(entity => entity.Ani.CurrentImage != null));
             var R2 = new Rectangle();
             var OR2 = new Rectangle();
             int i = 0;
-            while (i < combatants.Count)
+            var count = combatants.Count;
+            while (i < count)
             {
                 Entity E = combatants[i];
-                if (E is ICombatant)
+                //if (E is ICombatant)
                 {
-                    ICombatant EI = (ICombatant)E;
+                    ICombatant EI = (ICombatant)E.As<ICombatant>();
                     Rectangle R = E.GetHitbox();
                     Vector2 spd = E.Speed * 0.5f;
                     //Rectangle R2 = new Rectangle(R.x - (spd.X), R.y - (spd.Y), R.width, R.height);
@@ -436,12 +487,13 @@ namespace CirnoGame
                     //List<Entity> L = new List<Entity>(harmfulEntity.Where(entity => entity != E && entity.GetHitbox().isTouching(R)));
                     //List<Entity> L = new List<Entity>(harmfulEntity.Where(entity => entity != E && ((ICombatant)((IHarmfulEntity)entity).Attacker).Team != EI.Team));
                     //List<Entity> L = new List<Entity>(System.Linq.Enumerable.Where<global::CirnoGame.Entity>(harmfulEntity, (global::System.Func<global::CirnoGame.Entity, bool>)(entity => entity != E && !((IHarmfulEntity)entity).Attacker.SameTeam((Entity)EI))));
-                    List<Entity> L = new List<Entity>(harmfulEntity.Where(entity => entity != E && !((IHarmfulEntity)entity).Attacker.SameTeam((Entity)EI)));
+                    List<Entity> L = new List<Entity>(harmfulEntity.Where(entity => entity != E && !(entity.As<IHarmfulEntity>()).Attacker.SameTeam(EI.As<Entity>())));
                     int j = 0;
-                    while (j < L.Count)
+                    var ln = L.Count;
+                    while (j < ln)
                     {
                         Entity tmp = L[j];
-                        IHarmfulEntity HE = (IHarmfulEntity)tmp;
+                        IHarmfulEntity HE = tmp.As<IHarmfulEntity>();
                         Rectangle OR = tmp.GetHitbox();
                         Vector2 spd2 = tmp.Speed * 0.5f;
                         //Rectangle OR2 = new Rectangle(OR.x - (spd2.X), OR.y - (spd2.Y), OR.width, OR.height);
@@ -453,23 +505,44 @@ namespace CirnoGame
                             {
                                 var LHP = EI.HP;
                                 EI.onDamaged(HE, HE.touchDamage);
-                                if (LHP > EI.HP)
+                                var damaged = LHP > EI.HP;
+
+                                if (damaged)
                                 {
-                                    ((Entity)EI).PlaySound("hit");
-                                }
-                                if (EI.HP <= 0)
-                                {
-                                    if (((Entity)EI).HandledLocally)
+                                    if (EI == player)
                                     {
-                                        dynamic D = new object();
-                                        D.I = ((Entity)EI).ID;
-                                        D.A = ((Entity)HE.Attacker).ID;
-                                        D.S = ((Entity)HE).ID;
-                                        SendEvent("Kill", D);
+                                        EI.As<Entity>().PlaySound("damaged");
+                                    }
+                                    else
+                                    {
+                                        EI.As<Entity>().PlaySound("hit");
                                     }
                                 }
+
+                                if (EI.HP <= 0)
+                                {
+                                    if (EI.As<Entity>().HandledLocally)
+                                    {
+                                        dynamic D = new object();
+                                        D.I = EI.As<Entity>().ID;
+                                        D.A = HE.Attacker.ID;
+                                        D.S = HE.As<Entity>().ID;
+                                        SendEvent("Kill", D);
+                                    }
+                                    /*if (damaged)
+                                    {
+                                        EI.As<Entity>().PlaySound("kill");
+                                    }*/
+                                }
+                                else
+                                {
+                                    /*if (damaged)
+                                    {
+                                        EI.As<Entity>().PlaySound("hit");
+                                    }*/
+                                }
                             }
-                            Attack((ICombatant)EI, (IHarmfulEntity)HE);
+                            Attack(EI.As<ICombatant>(), HE.As<IHarmfulEntity>());
                         }
                         j++;
                     }
@@ -489,7 +562,7 @@ namespace CirnoGame
             if (target.HP > 0 && source.ontouchDamage(target))
             {
                 target.onDamaged(source, source.touchDamage);
-                ((Entity)target).PlaySound("hit");
+                //((Entity)target).PlaySound("hit");
                 if (target.HP <= 0)
                 {
                     if (((Entity)target).HandledLocally)
@@ -540,11 +613,27 @@ namespace CirnoGame
         public void AddEntity(Entity E)
         {
             entities.Add(E);
+            if (E is ICombatant)
+            {
+                combatants.Add(E.ToDynamic());
+            }
+            if (E is IHarmfulEntity)
+            {
+                harmful.Add(E.ToDynamic());
+            }
         }
         public void RemoveEntity(Entity E)
         {
             E.onRemove();
             entities.Remove(E);
+            if (E is ICombatant)
+            {
+                combatants.Remove(E.ToDynamic());
+            }
+            if (E is IHarmfulEntity)
+            {
+                harmful.Remove(E.ToDynamic());
+            }
         }
         public override void Render()
         {
@@ -564,7 +653,7 @@ namespace CirnoGame
             camera.Apply(g);
             //TM.position.Y = -200;
             TM.Draw(g);
-            entities.ForEach((global::System.Action<global::CirnoGame.Entity>)(E => { if (E.Alive && E.Visible) { E.Draw(g); } }));
+            entities.ForEach(E => { if (E.Alive && E.Visible) { E.Draw(g); } });
 
             g.Restore();
 
@@ -652,9 +741,20 @@ namespace CirnoGame
             var Y = H;
             var X = W / 2;
             var i = 0;
+            
             //var sz = spriteBuffer.Width * 0.015f;
             var sz = spriteBuffer.Width * 0.0115f;
             g.GlobalAlpha = 0.8f;
+            if (Door.Opened)
+            {
+                var DA = BigKey;
+                //var Dsz = spriteBuffer.Width * 0.018f;
+                var Dsz = sz * 1.5f;
+                var DR = DA.Height / DA.Width;
+
+                g.DrawImage(DA, X, Y, Dsz, Dsz * R);
+                X += W;
+            }
             while (i < player.keys)
             {
                 g.DrawImage(Key, X, Y, sz, sz * R);
@@ -957,6 +1057,42 @@ namespace CirnoGame
                 }*/
                 camera.Update();
                 return;
+            }
+
+            if (freecam)
+            {
+                if (KeyboardManager._this.PressedButtons.Contains(101) || KeyboardManager._this.PressedButtons.Contains(111))
+                {
+                    var TEST = RoomOpeningLever.TEST;
+                    if (KeyboardManager._this.PressedButtons.Contains(106) && !TEST.Activated)
+                    {
+                        TEST.Activate();
+                    }
+                    if (TEST != null)
+                    {
+                        if (!TEST.Activated && !KeyboardManager._this.PressedButtons.Contains(111))
+                        {
+                            camera.CenteredTargetPosition = TEST.Position;
+                        }
+                        else
+                        {
+                            var T = TM.GetTile(TEST.Room.SX, TEST.Room.SY);
+                            var HB = T.GetHitbox();
+                            camera.CenteredTargetPosition = new Vector2(HB.left, HB.top);
+                        }
+                        if (KeyboardManager._this.TappedButtons.Contains(32))
+                        {
+                            player.Position.X = camera.Center.X;
+                            player.Position.Y = camera.Center.Y;
+                        }
+                        camera.Update();
+                        return;
+                    }
+                    else
+                    {
+                        player.MSG.ChangeText("No lever on map");
+                    }
+                }
             }
             if (player.HP < 0)
                 return;

@@ -45,7 +45,7 @@ namespace CirnoGame
             return T;
         }
 
-        public void Damage(float damage)
+        public bool Damage(float damage)
         {
             HP -= damage;
             if (HP <= 0 && topSolid)
@@ -59,10 +59,12 @@ namespace CirnoGame
                 /*map.ForceRedraw();*/
                 UpdateTile();
                 SpawnParticles();
+                return true;
             }
             else
             {
                 map.RedrawTile(column, row, false);
+                return false;
             }
         }
         public void UpdateTile()
@@ -151,6 +153,7 @@ namespace CirnoGame
                 bottomSolid = value;
             }
         }
+        Rectangle HR = new Rectangle();
         public Rectangle GetHitbox()
         {
             /*if (_hitbox == null)
@@ -161,7 +164,25 @@ namespace CirnoGame
             }*/
             var tsz = map.tilesize;
             var pos = map.position;
-            return new Rectangle(pos.X + (column * tsz), pos.Y + (row * tsz), tsz, tsz);
+            HR.Set(pos.X + (column * tsz), pos.Y + (row * tsz), tsz, tsz);
+            return HR;
+            //return new Rectangle(pos.X + (column * tsz), pos.Y + (row * tsz), tsz, tsz);
+            //return _hitbox;
+        }
+        public void GetHitbox2(Rectangle OUT)
+        {
+            /*if (_hitbox == null)
+            {
+                var tsz = map.tilesize;
+                var pos = map.position;
+                _hitbox = new Rectangle(pos.X + (column * tsz), pos.Y + (row * tsz), tsz, tsz);
+            }*/
+            var tsz = map.tilesize;
+            var pos = map.position;
+            OUT.x = pos.X + (column * tsz);
+            OUT.y = pos.Y + (row * tsz);
+            OUT.width = tsz;
+            OUT.height = tsz;
             //return _hitbox;
         }
         public bool platform

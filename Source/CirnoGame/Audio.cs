@@ -15,6 +15,7 @@ namespace CirnoGame
         protected bool _hasPlayed;
         public string ID { get; protected set; }
         protected List<HTMLAudioElement> _blast;
+        public double lastplayed = double.NegativeInfinity;
         public bool IsPlaying
         {
             get
@@ -137,10 +138,16 @@ namespace CirnoGame
 
         public void Blast(float volume = 1f)
         {
+            var T = App.totalTime;
+            if (T - lasttime < 150)
+            {
+                return;//prevent audio spam.
+            }
             if (!IsPlaying)
             {
                 Volume = volume;
                 Play();
+                lasttime = T;
             }
             else
             {
@@ -157,6 +164,7 @@ namespace CirnoGame
                             A.Volume = volume;
                             A.Play();
                             i = _blast.Count;
+                            lasttime = T;
                         }
                     }
                     i++;

@@ -15,6 +15,7 @@ namespace CirnoGame
         public float fallaccel = 0.1f;
         public string itemName;
         public int collectionDelay = 10;
+        public string sound = "powerup";
         public CollectableItem(Game game, string itemName) : base(game)
         {
             Ani = new Animation(AnimationLoader.Get("images/items/" + itemName));
@@ -51,7 +52,7 @@ namespace CirnoGame
                     Vspeed = 0;
                     Position.CopyFrom(Game.player.Position);
                     onCollected(((PlayerCharacter)Game.player));
-                    PlaySound("powerup");
+                    PlaySound(sound);
                     return;
 
                 }

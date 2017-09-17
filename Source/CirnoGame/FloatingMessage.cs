@@ -12,6 +12,7 @@ namespace CirnoGame
         public int time = 30;
         public TextSprite Text;
         float alpha = 1;
+        public bool autokill = true;
         public FloatingMessage(Game game, string text) : base(game)
         {
             Ani = new Animation(null);
@@ -24,19 +25,33 @@ namespace CirnoGame
             Text.FontSize = 14;
             time = 30 + (text.Length * 20);
         }
+        public void ChangeText(string text,string color=null)
+        {
+            Text.Text = text;
+            time = 30 + (text.Length * 20);
+            alpha = 1;
+            if (color != null)
+            {
+                Text.TextColor = color;
+            }
+        }
         public override void Update()
         {
             base.Update();
             if (time > 0)
             {
                 time--;
-                if (time < 1)
+                if (time < 1 && alpha>0)
                 {
                     //Alive = false;
                     alpha -= 0.05f;
                     if (alpha <= 0)
                     {
-                        Alive = false;
+                        alpha = 0;
+                        if (autokill)
+                        {
+                            Alive = false;
+                        }
                     }
                     time = 1;
                 }
@@ -47,6 +62,10 @@ namespace CirnoGame
             //base.Draw(g);
             if (alpha < 1)
             {
+                if (alpha <= 0)
+                {
+                    return;
+                }
                 g.GlobalAlpha = alpha;
             }
             //Text.Position.CopyFrom(Position);

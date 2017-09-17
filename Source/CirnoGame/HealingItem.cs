@@ -12,6 +12,7 @@ namespace CirnoGame
         {
             floats = false;
             magnetDistance = 20;
+            sound = "ok";
         }
         public override bool CanCollect(PlayerCharacter player)
         {

@@ -21,7 +21,7 @@ namespace CirnoGame
             {
                 dynamic test = GetType();
                 var FN = Script.Write<string>("test[\"$$fullname\"]");
-                Helper.Log("FN:" + FN);
+                //Helper.Log("FN:" + FN);
                 string[] s = FN.Split(".");
                 BehaviorName = s[s.Length - 1];
                 //BehaviorName = GetType().FullName;

@@ -22,14 +22,22 @@ namespace CirnoGame
         }
         public override void Update()
         {
+            var againstwall = false;
             bool[] controller = _platformer.Controller;
-            if (controller[0] && _platformer.Hspeed > -maxSpeed)
+            var X = 0;
+            if (controller[0] && !controller[1] && _platformer.Hspeed > -maxSpeed)
             {
                 _platformer.Hspeed = (float)Math.Max(_platformer.Hspeed - (accel + _platformer.friction), -maxSpeed);
+                X = -1;
+                if (_platformer.RightWall != null)
+                    againstwall = true;
             }
-            if (controller[1] && _platformer.Hspeed < maxSpeed)
+            if (controller[1] && !controller[0] && _platformer.Hspeed < maxSpeed)
             {
                 _platformer.Hspeed = (float)Math.Min(_platformer.Hspeed + (accel + _platformer.friction), maxSpeed);
+                X = 1;
+                if (_platformer.LeftWall != null)
+                    againstwall = true;
             }
             var jumpbutton = 5;
             if (_platformer.onGround)
@@ -38,22 +46,18 @@ namespace CirnoGame
             }
             if (_platformer.Vspeed >= 0 && _platformer.onGround)
             {
-                //if (controller[jumpbutton] && _platformer.Ceiling == null)
-                //if (controller[jumpbutton] && _platformer.onGround && _platformer.Ceiling == null)
                 if (_platformer.Pressed(jumpbutton) && _platformer.onGround && _platformer.Ceiling == null)
                 {
                     _platformer.Vspeed = -jumpSpeed;
                     entity.PlaySound("jump");
-                    ///entity.PlaySound("jump");
                 }
-                /*else if (controller[3] && _platformer.Floor != null && _platformer.Floor.platform)
-                {
-                    //platformer.y = groundY + 2;
-                    _platformer.onGround = false;
-                    _platformer.Floor = null;
-                    _platformer.y += 2;
-                }*/
             }
+            /*else if (_platformer.Pressed(jumpbutton) && _platformer.Ceiling == null && againstwall && _platformer.Vspeed >= 0)
+            {
+                //perform wall jump
+                _platformer.Hspeed = X * maxSpeed;
+                _platformer.Vspeed = -(jumpSpeed * ((1 + airjumppower) / 2f));
+            }*/
             else if (airJumps < maxAirJumps && _platformer.Pressed(jumpbutton) && _platformer.Ceiling == null)
             {
                 _platformer.Vspeed = -(jumpSpeed * airjumppower);

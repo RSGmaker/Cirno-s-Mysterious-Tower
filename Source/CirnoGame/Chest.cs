@@ -13,6 +13,16 @@ namespace CirnoGame
             Ani = new Animation(AnimationLoader._this.GetAnimation("images/misc/chest"));
             Ani.ImageSpeed = 0;
         }
+        public void Goldify()
+        {
+            var P = Ani.Position;
+            Ani = new Animation(AnimationLoader._this.GetAnimation("images/misc/goldchest"));
+            Ani.ImageSpeed = 0;
+            Ani.Position.CopyFrom(P);
+            Golden = true;
+        }
+        public bool ForceLocked = false;
+        public bool Golden { get; private set; }
         public bool Opened { get; private set; }
         public override void Update()
         {
@@ -20,7 +30,7 @@ namespace CirnoGame
             var F = GetFloor();
             if (F == null)
             {
-                Vspeed = 1;
+                Vspeed = 2;
             }
             else
             {
@@ -28,19 +38,31 @@ namespace CirnoGame
                 y = F.GetHitbox().top - Ani.CurrentImage.Height;
             }
             var P = (PlayerCharacter)Game.player;
-            if (!Opened && P.Position.EstimatedDistance(Position) < 16 && P.Controller[2] && P.keys > 0)
+            if (P.Position.EstimatedDistance(Position) < 16)
             {
-                P.keys--;
-                Open(P);
-                /*Ani.CurrentFrame = 1;
-                Ani.SetImage();
-                Ani.Update();*/
+                if (!ForceLocked)
+                {
+                    if (!Opened && P.Controller[2] && (P.keys > 0 || Golden))
+                    {
+                        if (!Golden)
+                        {
+                            P.keys--;
+                        }
+                        Open(P);
+                    }
+                }
+                else if (P.Controller[2])
+                {
+                    P.MSG.ChangeText("It's sealed with magic...");
+                }
             }
         }
+        string[] TupleNames = new string[]{"Null","Single","Double","Triple","Quadruple","Quintuple","Sextuple","Septuple","Octuple", "Nonuple","Decuple"};
         private void Open(PlayerCharacter player)
         {
             if (!Opened)
             {
+                PlaySound("chestopen");
                 Ani.CurrentFrame = 1;
                 Ani.SetImage();
                 Ani.Update();
@@ -55,7 +77,7 @@ namespace CirnoGame
                 {
                     var common = new string[] { "point", "point", "point", "point", "point", "point", "heart", "heart", "tripleheart", "singleorb" };
                     var rare = new string[] { "attackpower", "defensepower", "mining" };
-                    var legendary = new string[] { "triplejump", "cheaperblocks", "invincibility" };
+                    var legendary = new string[] { "triplejump", "cheaperblocks", "invincibility", "repeater" };
 
 
 
@@ -64,7 +86,7 @@ namespace CirnoGame
 
                     if (picker == null || Math.Random() < 0.2)
                     {
-                        if (R < 0.70)
+                        if (R < 0.70 && !Golden)
                         {
                             picker = common;
                             S = "common";
@@ -73,11 +95,10 @@ namespace CirnoGame
                         else
                         {
                             R = Math.Random();
-                            if (R < 0.90)
+                            if (R < 0.91)
                             {
                                 picker = rare;
                                 S = "rare";
-                                //color = "#FF9922";
                                 color = "#FFBB33";
                             }
                             else
@@ -88,7 +109,7 @@ namespace CirnoGame
                             }
                         }
                     }
-                    C = CirnoGame.HelperExtensions.Pick<string>(picker);
+                    C = picker.Pick();
                     ok = false;
                     CollectableItem CI;
                     switch (C)
@@ -214,7 +235,7 @@ namespace CirnoGame
                                 break;
                             }
                             player.invincibilitymod = 2;
-                            M = "invincibility extended";
+                            M = "Invincibility extended";
                             break;
 
                         case "attackpower":
@@ -224,6 +245,15 @@ namespace CirnoGame
                         case "defensepower":
                             player.defensepower += 1;
                             M = "Defensive Power " + (int)(player.defensepower);
+                            break;
+                        case "repeater":
+                            if (player.totalshots > 2)
+                            {
+                                ok = true;
+                                break;
+                            }
+                            player.totalshots += 1;
+                            M = TupleNames[player.totalshots]+" shot";
                             break;
                         default:
                             ok = true;

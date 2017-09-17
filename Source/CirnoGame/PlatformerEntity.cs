@@ -194,7 +194,6 @@ namespace CirnoGame
             {
                 Vspeed = (float)Math.Min(Vspeed + gravity, maxFallSpeed);
             }
-            bool unstuck = false;
             bool stuck = false;
             if (Floor != null)
             {

@@ -37,6 +37,7 @@ namespace CirnoGame
             Ani = new Animation(AnimationLoader.Get("images/misc/door"));
             Ani.ImageSpeed = 0;
             Ani.SetImage();
+            RemovedOnLevelEnd = false;
         }
         public void DropToGround()
         {

@@ -32,9 +32,17 @@ namespace CirnoGame
         public float defensepower = 1f;
 
         public float invincibilitytime = 0;
-        public float blockprice = 9;
+        public float blockprice = 9f;
 
         public float invincibilitymod = 1f;
+
+        public int currentshot = 0;
+        public int shotdelay = 5;
+        public int currentshotdelay = 0;
+        public int totalshots = 1;//number of shots per command
+
+        public FloatingMessage MSG;
+
 
         public int PointsForKilling
         {
@@ -66,85 +74,80 @@ namespace CirnoGame
             }
             if (shootRecharge <= 0)
             {
-                var PB = new PlayerBullet(Game, this, "Images/misc/crystal");
-                PB.Hspeed = Ani.Flipped ? -2.5f : 2.5f;
-                PB.x = x + (Ani.Flipped ? -4 : 12);
-                PB.y = y + 10;
-                if (!Controller[0] && !Controller[1])
-                {
-                    /*if (Controller[2])
-                    {
-                        PB.Vspeed = -(float)Math.Abs(PB.Hspeed);
-                        PB.Hspeed = 0;
-                    }else if (Controller[3])
-                    {
-                        PB.Vspeed = (float)Math.Abs(PB.Hspeed);
-                        PB.Hspeed = 0;
-                    }*/
-                    /*if (Controller[2])
-                    {
-                        PB.Hspeed *= 0.8f;
-                        PB.Vspeed = -(float)Math.Abs(PB.Hspeed);
-
-                    }
-                    else if (Controller[3])
-                    {
-                        PB.Hspeed *= 0.8f;
-                        PB.Vspeed = (float)Math.Abs(PB.Hspeed);
-                    }*/
-                    if (Controller[2])
-                    {
-                        PB.Hspeed *= 0.8f;
-                        PB.Vspeed = -(float)Math.Abs(PB.Hspeed);
-                        PB.Hspeed *= 0.6f;
-                    }
-                    else if (Controller[3])
-                    {
-                        PB.Hspeed *= 0.8f;
-                        PB.Vspeed = (float)Math.Abs(PB.Hspeed);
-                        PB.Hspeed *= 0.6f;
-                    }
-                }
-                else
-                {
-                    if (Controller[2])
-                    {
-                        PB.Hspeed *= 0.9f;
-                        PB.Vspeed = -(float)Math.Abs(PB.Hspeed * 0.7);
-
-                    }
-                    else if (Controller[3])
-                    {
-                        PB.Hspeed *= 0.9f;
-                        PB.Vspeed = (float)Math.Abs(PB.Hspeed * 0.7);
-                    }
-                }
-                PB.x -= PB.Hspeed;
-                PB.y -= PB.Vspeed;
-                PB.attacksterrain = true;
-                PB.digpower = digpower * 0.6667f;
-                PB.touchDamage = attackpower;
-                Game.AddEntity(PB);
+                currentshot = 1;
+                DoShot();
                 //shootRecharge = 12;
+                
+                currentshotdelay = 0;
                 shootRecharge = 20;
+                
             }
             shoottime = 50;
             turntime = 0;
 
         }
+        void DoShot()
+        {
+            var PB = new PlayerBullet(Game, this, "Images/misc/crystal");
+            PB.Hspeed = Ani.Flipped ? -2.5f : 2.5f;
+            PB.x = x + (Ani.Flipped ? -4 : 12);
+            PB.y = y + 10;
+            if (!Controller[0] && !Controller[1])
+            {
+                if (Controller[2])
+                {
+                    PB.Hspeed *= 0.8f;
+                    PB.Vspeed = -(float)Math.Abs(PB.Hspeed);
+                    PB.Hspeed *= 0.6f;
+                }
+                else if (Controller[3])
+                {
+                    PB.Hspeed *= 0.8f;
+                    PB.Vspeed = (float)Math.Abs(PB.Hspeed);
+                    PB.Hspeed *= 0.6f;
+                }
+            }
+            else
+            {
+                if (Controller[2])
+                {
+                    PB.Hspeed *= 0.9f;
+                    PB.Vspeed = -(float)Math.Abs(PB.Hspeed * 0.7);
+
+                }
+                else if (Controller[3])
+                {
+                    PB.Hspeed *= 0.9f;
+                    PB.Vspeed = (float)Math.Abs(PB.Hspeed * 0.7);
+                }
+            }
+            PB.x -= PB.Hspeed;
+            PB.y -= PB.Vspeed;
+            PB.attacksterrain = currentshot==1;
+            PB.digpower = (digpower) * 0.6667f;
+            PB.touchDamage = attackpower / (((totalshots-1f)/2f)+1f);
+            Game.AddEntity(PB);
+        }
         public PlayerCharacter(Game game) : base(game)
         {
             ChangeAni("stand");
             AddBehavior(new PlatformerControls(this));
-            /*AddBehavior(new FlightControls(this));
-            GravityEnabled = false;*/
             tapTimer = new int[Controller.Length];
             Team = 0;
             HP = maxHP;
+            MSG = new FloatingMessage(game, "");
+            MSG.Text.TextColor = "#FFFFFF";
+            //MSG.ChangeText("hello world");
+            MSG.autokill = false;
+            game.AddEntity(MSG);
+            MSG.RemovedOnLevelEnd = false;
+            RemovedOnLevelEnd = false;
         }
         public override void Update()
         {
             base.Update();
+            MSG.Position.X = Position.X;
+            MSG.Position.Y = Position.Y-10;
 
             if (shoottime > 0)
             {
@@ -197,6 +200,16 @@ namespace CirnoGame
             {
                 shoot();
             }*/
+            if (currentshot < totalshots)
+            {
+                currentshotdelay++;
+                if (currentshotdelay >= shotdelay)
+                {
+                    currentshotdelay = 0;
+                    currentshot++;
+                    DoShot();
+                }
+            }
             if (Controller[4])
             {
                 turntime = 0;
@@ -209,6 +222,7 @@ namespace CirnoGame
             {
                 PlaceBlock();
             }
+            
             UpdateController();
             //if (turntime > 22 && Hspeed != 0)
             //if (turntime > 18 && Hspeed != 0)
@@ -247,7 +261,7 @@ namespace CirnoGame
                 T.texture = 4;
                 T.UpdateTile();
                 T.HP = T.maxHP * 2;
-                Game.timeRemaining -= blockprice;
+                Game.timeRemaining -= price;
             }
         }
         public void ChangeAni(string animation, bool reset = false)
@@ -302,13 +316,19 @@ namespace CirnoGame
             if (invincibilitytime <= 0)
             {
                 HP -= (amount / defensepower);
-                invincibilitytime = 45;
+                invincibilitytime = 45*invincibilitymod;
             }
+        }
+        public override void onRemove()
+        {
+            base.onRemove();
+            Game.RemoveEntity(MSG);
         }
 
         public void onDeath(IHarmfulEntity source)
         {
             //throw new NotImplementedException();
+            invincibilitytime *= 3f;
 
             if (Game.player == this)
             {

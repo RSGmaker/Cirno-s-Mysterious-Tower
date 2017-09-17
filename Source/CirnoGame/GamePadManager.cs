@@ -18,7 +18,7 @@ namespace CirnoGame
         {
             get
             {
-                return new List<GamePad>(System.Linq.Enumerable.Where<global::CirnoGame.GamePad>(gamepads, (global::System.Func<global::CirnoGame.GamePad, bool>)(gamepad => gamepad.connected)));
+                return new List<GamePad>(gamepads.Where(gamepad => gamepad.connected));
             }
         }
         public GamePad keyboard;
@@ -30,7 +30,7 @@ namespace CirnoGame
         }
         public GamePad GetPad(string id)
         {
-            List<GamePad> L = new List<GamePad>(System.Linq.Enumerable.Where<global::CirnoGame.GamePad>(gamepads, (global::System.Func<global::CirnoGame.GamePad, bool>)(gamepad => gamepad.id == id)));
+            List<GamePad> L = new List<GamePad>(gamepads.Where(gamepad => gamepad.id == id));
             if (L.Count > 0)
             {
                 return L[0];

@@ -22,6 +22,8 @@ namespace CirnoGame
         public string ID;
         public bool HideHitbox;
         public bool HandledLocally = true;
+
+        public bool RemovedOnLevelEnd = true;
         public float Hspeed
         {
             get
@@ -150,7 +152,7 @@ namespace CirnoGame
         {
             if (_behaviors == null)
                 return;
-            List<EntityBehavior> L = new List<EntityBehavior>(System.Linq.Enumerable.Where<global::CirnoGame.EntityBehavior>(_behaviors, (global::System.Func<global::CirnoGame.EntityBehavior, bool>)(behavior => behavior is T)));
+            List<EntityBehavior> L = new List<EntityBehavior>(_behaviors.Where(behavior => behavior is T));
             /*if (L.Count > 0)
             {
                 RemoveBehavior(L[0]);
@@ -170,15 +172,15 @@ namespace CirnoGame
             {
                 return (dynamic)L[0];
             }*/
-            return System.Linq.Enumerable.First<global::CirnoGame.EntityBehavior>(_behaviors, (global::System.Func<global::CirnoGame.EntityBehavior, bool>)(behavior => behavior is T)).Cast<T>();
+            return _behaviors.First(behavior => behavior is T).Cast<T>();
             return default(T);
         }
         //public T GetBehavior<T>(Func<EntityBehavior,bool> func)
         public T GetBehavior<T>(Func<T, bool> func)
         {
-            List<EntityBehavior> L = new List<EntityBehavior>(System.Linq.Enumerable.Where<global::CirnoGame.EntityBehavior>(_behaviors, (global::System.Func<global::CirnoGame.EntityBehavior, bool>)(behavior => behavior is T)));
+            List<EntityBehavior> L = new List<EntityBehavior>(_behaviors.Where(behavior => behavior is T));
             Func<EntityBehavior, bool> F = func.ToDynamic();
-            return System.Linq.Enumerable.First<global::CirnoGame.EntityBehavior>(L, (global::System.Func<global::CirnoGame.EntityBehavior, bool>)F).Cast<T>();
+            return L.First(F).Cast<T>();
             //return L.First(func).Cast<T>();
         }
         public string GetTeamColor()
@@ -205,23 +207,27 @@ namespace CirnoGame
         }
         public bool SameTeam(Entity combatant)
         {
-            if (this == combatant)
+            if (Script.Write<bool>("this == combatant"))
             {
                 return true;
             }
+            dynamic A = this.ToDynamic();
+            dynamic B = combatant.ToDynamic();
 
-            if (this is ICombatant && combatant is ICombatant)
+            if (A.PointsForKilling && B.PointsForKilling)
             {
-                if (((ICombatant)this).Team == ((ICombatant)combatant).Team)
+                ICombatant AA = A;
+                ICombatant BB = B;
+                if (Script.Write<bool>("AA.Team == BB.Team"))
                 {
-                    if (Game.GamePlaySettings.GameMode.Teams)
+                    if (Game.Teams)
                     {
                         //return ((ICombatant)this).Team != 0;
                         return true;
                     }
                     else
                     {
-                        return ((ICombatant)this).Team == 0;
+                        return Script.Write<bool>("AA.Team == 0");
                     }
                 }
             }
@@ -239,7 +245,7 @@ namespace CirnoGame
             }*/
             try
             {
-                return System.Linq.Enumerable.First<global::CirnoGame.EntityBehavior>(_behaviors, (global::System.Func<global::CirnoGame.EntityBehavior, bool>)(behavior => behavior.BehaviorName == Name));
+                return _behaviors.First(behavior => behavior.BehaviorName == Name);
             }
             catch
             {

@@ -21,6 +21,7 @@ namespace CirnoGame
         public TextSprite Credits;
 
         public ButtonMenu menu;
+        ButtonSprite Controller;
         public Game game;
         public TitleScreen()
         {
@@ -67,7 +68,7 @@ namespace CirnoGame
             Controls = new TextSprite();
             Controls.FontSize = (int)(spriteBuffer.Width * 0.025f);
             Controls.TextColor = "#FFFFFF";
-            Controls.Text = "Controls:\nLeft/Right=Move\nUp/Down=Aim(Up activates chests/doors)\nZ=Shoot\nX=Jump/Mid-air jump\nA=Place block below you(costs time)\nEnter=Pause\nM=Toggle mute";
+            Controls.Text = "Keyboard Controls:\nLeft/Right=Move\nUp/Down=Aim(Up activates chests/doors)\nZ=Shoot\nX=Jump/Mid-air jump\nA=Place block below you(costs time)\nEnter=Pause\nM=Toggle mute";
             Controls.ShadowColor = "#000000";
             Controls.ShadowOffset = new Vector2(2, 2);
             Controls.ShadowBlur = 2;
@@ -82,6 +83,28 @@ namespace CirnoGame
             //menu.Finish();
             B.Position.X += spriteBuffer.Width * 0.38f;
             B.Position.Y = spriteBuffer.Height * 0.7f;
+
+            //var CB = menu.AddButton("Controller:"+InputControllerManager._this.Controllers[0].id);
+            var CB = menu.AddButton("Controller:" + App.IC.id);
+            Controller = CB;
+            CB.OnClick = () => {
+                var ind = InputControllerManager._this.Controllers.IndexOf(App.IC);
+                ind++;
+                if (ind>= InputControllerManager._this.Controllers.Count)
+                {
+                    ind -= InputControllerManager._this.Controllers.Count;
+                }
+                App.IC = InputControllerManager._this.Controllers[ind];
+                var TS = CB.Contents.As<TextSprite>();
+                var W = TS.spriteBuffer.Width;
+                TS.Text = "Controller:" + App.IC.id;
+                TS.ForceUpdate();
+                CB.Position.X -= ((TS.spriteBuffer.Width - W) / 2);
+            };
+            CB.Position.X += spriteBuffer.Width * 0.38f; ;
+            CB.Position.Y = B.Position.Y + (spriteBuffer.Height * 0.15f);
+            //CB.Visible = false;
+            CB.Lock();
 
             Credits = new TextSprite();
             Credits.FontSize = (int)(spriteBuffer.Width * 0.015f);
@@ -106,6 +129,11 @@ namespace CirnoGame
         public override void Draw(CanvasRenderingContext2D g)
         {
             base.Draw(g);
+            if (Controller.locked && InputControllerManager._this.Controllers.Count > 1)
+            {
+                Controller.Unlock();
+            }
+            
             Title.Draw(g);
             Version.Draw(g);
             Desc.Draw(g);

@@ -12,6 +12,7 @@ namespace CirnoGame
         {
             floats = false;
             magnetDistance = 20;
+            sound = "key";
         }
 
         public override void onCollected(PlayerCharacter player)
@@ -23,6 +24,14 @@ namespace CirnoGame
             FM.Text.TextColor = "#77FFFF";
             FM.Position = new Vector2(x + 8, y - 20);
             Game.AddEntity(FM);
+        }
+        public override void Update()
+        {
+            base.Update();
+            if (y <= 0)
+            {
+                Game.LevelRestart();
+            }
         }
     }
 }

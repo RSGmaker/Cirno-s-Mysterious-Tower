@@ -153,7 +153,7 @@ namespace CirnoGame
             ///Script.Write("var grd = g.createLinearGradient(0, 0, 0, size.y);grd.addColorStop(0, color);grd.addColorStop(0.4, wht);grd.addColorStop(1, color);g.fillStyle = grd;");
             var grd = g.CreateLinearGradient(0, 0, 0, size.Y);
             grd.AddColorStop(0, color);
-            grd.AddColorStop(0.4, "white");
+            grd.AddColorStop(0.4, wht);
             grd.AddColorStop(1, color);
             g.FillStyle = grd;
             g.FillRect(0, 0, (int)_buttonBuffer.Size.X, (int)_buttonBuffer.Size.Y);

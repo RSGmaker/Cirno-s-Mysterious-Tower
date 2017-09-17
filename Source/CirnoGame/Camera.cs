@@ -23,8 +23,10 @@ namespace CirnoGame
 
         //public float LinearPanSpeed = 1.6f;
         //public float LinearPanSpeed = 1.3f;
-        public float LinearPanSpeed = 1.2f;
-        public float LerpPanSpeed = 0.075f;
+        ///public float LinearPanSpeed = 1.2f;
+        public float LinearPanSpeed = 0.8f;
+        ///public float LerpPanSpeed = 0.075f;
+        public float LerpPanSpeed = 0.070f;
         //protected float _scale = 0.8f;
         protected float _scale = 1f;
         public float speedmod = 1;

@@ -50,7 +50,7 @@ namespace CirnoGame
                 GetImage(A);
                 i++;
             }
-            Global.SetTimeout((global::System.Action)action, delay);
+            Global.SetTimeout(action, delay);
         }
         public string GetData(string file)
         {

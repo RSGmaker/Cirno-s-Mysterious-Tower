@@ -8,6 +8,8 @@ namespace CirnoGame
 {
     public class MapGenerator
     {
+        public static MapRoom rootroom;
+        public static MapRoom doorroom;
         public static void Generate(Game game)
         {
             var player = game.player;//player character
@@ -54,6 +56,7 @@ namespace CirnoGame
             var map = game.TM;//the tilemap to generate
             var bounds = game.stageBounds;//the bounds to stay within
             MapRoom.PlacedRooms = new List<MapRoom>();
+            MapRoom.OpenRooms = new List<MapRoom>();
 
             var SX = map.columns / 2;
             var SY = map.rows / 3;
@@ -64,6 +67,7 @@ namespace CirnoGame
             root.EY = SY + 6 + (int)(Math.Random() * 10);
 
             root.game = game;
+            rootroom = root;
 
             //var roomtotal = 12+(int)(Math.Random() * 10);
             //var roomtotal = 16 + (int)(Math.Random() * 16);
@@ -77,14 +81,36 @@ namespace CirnoGame
                 Helper.Log("Couldn't generate root room.");
                 return;
             }
-            while (MapRoom.PlacedRooms.Count < roomtotal && attempts > 0)
+            while (MapRoom.OpenRooms.Count < roomtotal && attempts > 0)
             {
-                var L = CirnoGame.HelperExtensions.Pick<global::CirnoGame.MapRoom>(MapRoom.FindValidUnplacedRooms());
+                var L = MapRoom.FindValidUnplacedRooms().Pick();
                 if (L.PlaceAndExpand())
                 {
                     //rooms++;
                 }
                 attempts--;
+            }
+            var RR = game.stageBounds - game.TM.position;
+            RR.width -= game.TM.tilesize;
+            RR.height -= game.TM.tilesize;
+            game.TM.DrawRect(RR);
+            game.TM.ApplyBreakable();
+            var secrets = Math.Random()<0.3 ? 1 : 0;
+            if (secrets > 0 && Math.Random() < 0.3)
+            {
+                secrets++;
+            }
+            while (secrets > 0)
+            {
+                var L = MapRoom.FindValidUnplacedRooms().Pick();
+                if (L.PlaceAndExpand())
+                {
+                    L.MakeSecret();
+                    var lever = AttemptCreateLever(game, L);
+                    game.AddEntity(lever);
+                    Helper.Log("Placed secret room at:" + L.SX + "," + L.SY);
+                }
+                secrets--;
             }
             var V = FindEmptySpace(game);
             if (V != null)
@@ -93,6 +119,12 @@ namespace CirnoGame
                 player.y = V.Y;*/
                 game.Door.Position.CopyFrom(V);
                 game.Door.DropToGround();
+                doorroom = MapRoom.FindRoom(game.Door.Position);
+                if (doorroom == null)
+                {
+                    Helper.Log("Door room could not be determined...");
+                }
+                
                 var PC = (PlayerCharacter)player;
                 //PC.MoveToNewSpawn(V);
                 PC.MoveToNewSpawn(game.Door.Position);
@@ -103,6 +135,19 @@ namespace CirnoGame
                 Helper.Log("cannot locate a spawn point...");
             }
 
+        }
+        public static RoomOpeningLever AttemptCreateLever(Game game,MapRoom Target)
+        {
+            var i = 0;
+            while (i < 20)
+            {
+                var lever = RoomOpeningLever.FindAndPlaceOnWall(game, MapRoom.FindAnyEmptySpot(), Target);
+                if (lever != null)
+                {
+                    return lever;
+                }
+            }
+            return null;
         }
         public static Vector2 FindEmptySpace(Game game)
         {

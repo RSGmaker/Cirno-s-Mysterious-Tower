@@ -91,6 +91,7 @@
     <Compile Include="Rectangle.cs" />
     <Compile Include="RectangleI.cs" />
     <Compile Include="Renderer.cs" />
+    <Compile Include="RoomOpeningLever.cs" />
     <Compile Include="Sprite.cs" />
     <Compile Include="TextSprite.cs" />
     <Compile Include="Tile.cs" />

@@ -1,5 +1,7 @@
 Source/CirnoGame/bin/
 Source/CirnoGame/obj/
+*.bat
+*.exe
 
 # Windows image file caches
 Thumbs.db

@@ -125,6 +125,8 @@ namespace CirnoGame
             _this.MousePosition = new Vector2(evt.ClientX, evt.ClientY);
 
             //float left = float.Parse(App.Canvas.Style.Left.Replace("px", ""));
+            if (App.Div.Style.Left.IndexOf("px")<0)
+                return;
             float left = float.Parse(App.Div.Style.Left.Replace("px", ""));
             float x = evt.ClientX - left;
             float y = evt.ClientY;

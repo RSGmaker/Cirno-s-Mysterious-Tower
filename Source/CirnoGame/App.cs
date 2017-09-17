@@ -22,6 +22,7 @@ namespace CirnoGame
         private static double _lSize = -1;
         protected static double _missingTime = 0;
         protected static double _lTime = -1;
+        public static double totalTime;
 
         protected static bool _frameRendered = false;
 
@@ -31,7 +32,7 @@ namespace CirnoGame
         public static GameSprite CurrentView;
 
         public static string GameName = "Cirno's Mysterious Tower";
-        public static string GameVersion = "0.1b";
+        public static string GameVersion = "0.2";
         /*#if DEBUG
                 public static bool DEBUG = true;
         #else
@@ -45,81 +46,26 @@ namespace CirnoGame
             Document.Body.Style.CssText = "overflow: hidden;margin: 0;padding: 0;";
             GamePadManager._this = new GamePadManager();
             GamePadManager._this.Update();
-            Global.SetTimeout((global::System.Action)(() => {
+            Global.SetTimeout(() => {
                 GamePadManager._this.Update();
 
                 IC = InputControllerManager._this.Controllers[0];
                 InputMap IM = InputControllerManager._this.Controllers[0].InputMapping[2];
-                /*IM.map = 0;
-                IM.controllerID = "Mouse";*/
 
-                /*IM = InputControllerManager._this.Controllers[0].InputMapping[3];
-                IM.map = 0;
-                IM.controllerID = "Mouse";
-
-                //pointer controls
-                IM = InputControllerManager._this.Controllers[0].InputMapping[4];
-                IM.map = 2;
-                IM.controllerID = "Mouse";
-
-                IM = InputControllerManager._this.Controllers[0].InputMapping[5];
-                IM.map = 1;
-                IM.controllerID = "Mouse";*/
-
-                /*IM = InputControllerManager._this.Controllers[0].InputMapping[3];
-                IM.map = 2;
-                IM.controllerID = "Mouse";
-
-                //pointer controls
-                IM = InputControllerManager._this.Controllers[0].InputMapping[4];
-                IM.map = 1;
-                IM.controllerID = "Mouse";
-
-                IM = InputControllerManager._this.Controllers[0].InputMapping[5];
-                IM.map = 1;
-                IM.controllerID = "Mouse";*/
-
-                ///CurrentView = new TitleScreen();
-
-            }), 5);
+            }, 5);
 
             var ok = false;
             var uptest = true;
-            JSONArchive.Open("Assets/Images.JSON", (global::System.Action<global::CirnoGame.JSONArchive>)(json =>
+            JSONArchive.Open("Assets/Images.JSON", json =>
             {
                 JSON = json;
 
-                JSON.PreloadImages((global::System.Action)(() =>
+                JSON.PreloadImages(() =>
                 {
                     ok = true;
                     Finish();
-                }));
-            }));
-
-            // Create a new HTML Button
-            /*var button = Document.CreateElement("button");
-
-            // Set the Button text
-            button.InnerHTML = "Click Me";
-
-            // Add a Click event handler
-            button.OnClick = (ev) =>
-            {
-                // Write a message to the Console
-                //Console.WriteLine("Welcome to Bridge.NET");
-                if (ok)
-                {
-                    HTMLDivElement div = new HTMLDivElement();
-                    JSON.Images.Keys.ForEach(f =>
-                    {
-                        div.AppendChild(JSON.GetImage(f).CloneNode());
-                    });
-                    Document.Body.AppendChild(div);
-                }
-            };
-
-            // Add the button to the document body
-            Document.Body.AppendChild(button);*/
+                });
+            });
 
             // After building (Ctrl + Shift + B) this project, 
             // browse to the /bin/Debug or /bin/Release folder.
@@ -150,9 +96,7 @@ namespace CirnoGame
             HTMLCanvasElement Canv = new HTMLCanvasElement();
             Canvas = Canv;
             TargetAspect = 0.75;
-            //Canv.Width = 200;
             Canv.Width = 1024;
-            //Canv.Width = 1280;
             Canv.Height = (int)(Canv.Width * TargetAspect);
             ScreenBounds = new Rectangle(0, 0, Canv.Width, Canv.Height);
 
@@ -178,18 +122,12 @@ namespace CirnoGame
 
         private static void updateWindow()
         {
-            //var R = Window.InnerWidth / Window.InnerHeight;
             double size = Math.Ceiling(Window.InnerHeight * (1 / TargetAspect));
             if (size != _lSize)
             {
-                /*Canvas.Style.Width = size + "px";
-
-                Canvas.Style.Position = Position.Absolute;
-                Canvas.Style.Left = ((Window.InnerWidth / 2) - (size / 2)) + "px";*/
                 Canvas.Style.Width = "100%";
                 Div.Style.Width = size + "px";
 
-                //Div.Style.Position = Position.Absolute;
                 Div.Style.Position = Position.Relative;
                 Div.Style.Left = ((Window.InnerWidth / 2) - (size / 2)) + "px";
                 size = _lSize;
@@ -230,6 +168,7 @@ namespace CirnoGame
         protected static void Update(double time)
         {
             double delta = 0;
+            totalTime = time;
             if (time >= 0)
             {
                 if (_lTime < 0)
