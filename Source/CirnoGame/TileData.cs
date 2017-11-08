@@ -27,8 +27,11 @@ namespace CirnoGame
         public bool Breakable = false;
         public float HP = 4;
         public float maxHP = 4;
+        public bool opaque = true;
 
         private Rectangle _hitbox;
+
+        public Action<PlatformerEntity> SteppedOn;
 
         public TileData Clone()
         {

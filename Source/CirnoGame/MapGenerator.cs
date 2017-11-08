@@ -10,6 +10,7 @@ namespace CirnoGame
     {
         public static MapRoom rootroom;
         public static MapRoom doorroom;
+        public static MapRoom keyroom;
         public static void Generate(Game game)
         {
             var player = game.player;//player character
@@ -71,7 +72,10 @@ namespace CirnoGame
 
             //var roomtotal = 12+(int)(Math.Random() * 10);
             //var roomtotal = 16 + (int)(Math.Random() * 16);
-            var roomtotal = 16 + (int)(Math.Random() * 18);
+
+            //var roomMinimum = 16;
+            var roomMinimum = 10+Math.Min(game.level,4);
+            var roomtotal = roomMinimum + (int)(Math.Random() * (roomMinimum));
             //var rooms = 0;
 
             var attempts = 400;
@@ -113,6 +117,7 @@ namespace CirnoGame
                 secrets--;
             }
             var V = FindEmptySpace(game);
+            keyroom = null;
             if (V != null)
             {
                 /*player.x = V.X;

@@ -13,8 +13,15 @@ namespace CirnoGame
         public Entity Target;
         //public float maxDistance = 120;
         public float maxDistance = 130;
+        public float maxShadow = 5;
 
         public float attackpower = 1;
+        public float bulletSpeed = 0.5f;
+        public int bulletDuration = 60 * 15;
+
+        public bool ignoresterrain = false;
+        public string bulletgraphic = "ebullet";
+        public int attackTelegraphTime = 60;
         public AimedShooter(Entity entity) : base(entity)
         {
             /*entity.Ani.HueColor = "#FF0000";
@@ -31,13 +38,13 @@ namespace CirnoGame
 
             if (Target != null)
             {
-                if (time < 60)
+                if (time < attackTelegraphTime)
                 {
                     //if ((time & 4) > 0)
                     if (true)
                     {
                         //A.Shadow = 6-(time * 0.1f);
-                        A.Shadow = 5;
+                        A.Shadow = maxShadow;
                     }
                     else
                     {
@@ -92,14 +99,16 @@ namespace CirnoGame
         {
             if (Target == null || ((ICombatant)Target).HP<=0)
                 return;
-            var P = new PlayerBullet(entity.Game, entity, "images/misc/ebullet");
+            var P = new PlayerBullet(entity.Game, entity, "images/misc/"+bulletgraphic);
             P.Position.CopyFrom(entity.getCenter());
             
             var D = (Target.getCenter() - P.Position);
-            D.SetAsNormalize(0.5f);
+            D.SetAsNormalize(bulletSpeed);
             P.Hspeed = D.X;
             P.Vspeed = D.Y;
             P.touchDamage = attackpower;
+            P.ignoresterrain = ignoresterrain;
+            P.Duration = bulletDuration;
             entity.Game.AddEntity(P);
         }
     }

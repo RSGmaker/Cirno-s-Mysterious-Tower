@@ -73,6 +73,11 @@ namespace CirnoGame
             var max = 13;
             var dif = (max - min);
             int W = (int)(min + (Math.Random() * dif));
+
+            //min += 1;
+            min -= 1;
+            max -= 3;
+            dif = (max - min);
             int H = (int)(min + (Math.Random() * dif));
 
             var X = -1;

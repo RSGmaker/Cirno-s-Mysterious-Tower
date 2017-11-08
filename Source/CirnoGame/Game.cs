@@ -22,7 +22,9 @@ namespace CirnoGame
         public TextSprite TimerSprite;
 
         public float defaultTimeRemaining = 1000 * 60 * 3;//3 minutes
-        public float maxTimeRemaining = 1000 * 60 * 5;//3 minutes
+        //public float maxTimeRemaining = 1000 * 60 * 5;//3 minutes
+        public float lastStand = 1000 * 30;
+        public float baseLifeCost = 1000 * 15;
         public float timeRemaining;
         public float totalTime = 0;
         public int level = 0;
@@ -233,12 +235,54 @@ namespace CirnoGame
             //TM.ApplyBreakable();
 
 
-            var ghosts = Math.Min(18 + level * 2, 28);
+            //var ghosts = (int)(Math.Min(18 + level * 2, 28) * 0.85);
+            var ghosts = (int)(Math.Min(18 + level * 2, 28) * 1.0);
             var i = 0;
             //while (i < 110)
             while (i < ghosts)
             {
-                PlaceAndAddEnemy(new MRGhosty(this));
+                //if (Math.Random() < 0.67)
+                if (Math.Random() < 0.5)
+                {
+                    PlaceAndAddEnemy(new MRGhosty(this));
+                }
+                else
+                {
+                    var spike = Math.Random() < 0.25;
+                    var T = new Turret(this);
+                    PlaceAndAddEnemy(T);
+                    T.SetDown(spike);
+                    if (spike)
+                    {
+                        var TD = T.TTD;
+                        if (TD != null && TM.rows>TD.row+1)
+                        {
+                            var TDD = TM.data[TD.column, TD.row + 1];
+                            if (TDD.enabled && TDD.solid)
+                            {
+                                T.Alive = false;
+
+                                TD.texture = 7;
+                                TD.Breakable = false;
+                                TD.CanSlope = false;
+                                TD.opaque = false;
+                                TD.SteppedOn = E =>
+                                {
+                                    var IC = E.As<PlayerCharacter>();
+                                    if (IC.blockprice > 0 && IC.invincibilitytime <= 0)
+                                    {
+                                        IC.onDamaged(null, 1.5f+(level*1.5f));
+                                        IC.PlaySound("damaged");
+                                        if (IC.HP <= 0)
+                                        {
+                                            IC.onDeath(null);
+                                        }
+                                    }
+                                };
+                            }
+                        }
+                    }
+                }
                 i++;
             }
             i = 0;
@@ -268,7 +312,7 @@ namespace CirnoGame
                key.Position.CopyFrom(MapRoom.FindAnyEmptySpot());
                 attempts += 1;
             }
-
+            MapGenerator.keyroom = MapRoom.FindRoom(key.Position);
             ///PlaceAndAddEntity(new DoorKey(this));
             /*PlaceAndAddEntity(new DoorKey(this));
             PlaceAndAddEntity(new DoorKey(this));
@@ -287,10 +331,10 @@ namespace CirnoGame
         {
             if (!playing)
             {
-                PlayMusic("theme2");
+                PlayMusic("theme3");
                 return;
             }
-            var songs = 2;
+            var songs = 3;
             var levelspersong = 5;
             var S = (int)(level / levelspersong);
             S = S % songs;
@@ -416,15 +460,28 @@ namespace CirnoGame
             {
                 timeRemaining = 0;
                 TimerSprite.Text = "0";
+                TimerSprite.TextColor = "#FF0000";
                 if (player.HP > 0)
                 {
-                    player.HP -= 0.004f;
+                    player.HP -= 0.006f;
                 }
                 else
                 {
                     DoGameOver();
                 }
                 return;
+            }
+            else if (timeRemaining < baseLifeCost)
+            {
+                TimerSprite.TextColor = "#FF0000";
+            }
+            else if (timeRemaining < lastStand)
+            {
+                TimerSprite.TextColor = "#FFFF00";
+            }
+            else
+            {
+                TimerSprite.TextColor = "#FFFFFF";
             }
             var totalseconds = timeRemaining / 1000f;
             var totalminutes = totalseconds / 60;
@@ -474,6 +531,8 @@ namespace CirnoGame
             var OR2 = new Rectangle();
             int i = 0;
             var count = combatants.Count;
+            Vector2 spd = new Vector2();
+            Vector2 spd2 = new Vector2();
             while (i < count)
             {
                 Entity E = combatants[i];
@@ -481,7 +540,10 @@ namespace CirnoGame
                 {
                     ICombatant EI = (ICombatant)E.As<ICombatant>();
                     Rectangle R = E.GetHitbox();
-                    Vector2 spd = E.Speed * 0.5f;
+                    spd.CopyFrom(E.Speed);
+                    spd.Multiply(0.5f);
+                    //Vector2 spd = E.Speed * 0.5f;
+                    //spd.CopyFrom()
                     //Rectangle R2 = new Rectangle(R.x - (spd.X), R.y - (spd.Y), R.width, R.height);
                     R2.Set(R.x - (spd.X), R.y - (spd.Y), R.width, R.height);
                     //List<Entity> L = new List<Entity>(harmfulEntity.Where(entity => entity != E && entity.GetHitbox().isTouching(R)));
@@ -495,7 +557,9 @@ namespace CirnoGame
                         Entity tmp = L[j];
                         IHarmfulEntity HE = tmp.As<IHarmfulEntity>();
                         Rectangle OR = tmp.GetHitbox();
-                        Vector2 spd2 = tmp.Speed * 0.5f;
+                        //Vector2 spd2 = tmp.Speed * 0.5f;
+                        spd2.CopyFrom(tmp.Speed);
+                        spd2.Multiply(0.5f);
                         //Rectangle OR2 = new Rectangle(OR.x - (spd2.X), OR.y - (spd2.Y), OR.width, OR.height);
                         OR2.Set(OR.x - (spd2.X), OR.y - (spd2.Y), OR.width, OR.height);
                         //if (EI.Team != ((ICombatant)HE.Attacker).Team)
@@ -716,9 +780,16 @@ namespace CirnoGame
         {
             var PC = (PlayerCharacter)player;
             var color = "#00DD00";
-            if (timeRemaining <= 0)
+            if (timeRemaining < baseLifeCost)
             {
-                color = "#FF0000";
+                if (timeRemaining <= 0)
+                {
+                    color = "#CC0088";
+                }
+                else
+                {
+                    color = "#FF0000";
+                }
             }
 
             g.GlobalAlpha = 0.8f;
@@ -1097,6 +1168,7 @@ namespace CirnoGame
             if (player.HP < 0)
                 return;
             float D = (float)player.Hspeed * 32;
+            float lookAheadRate = 0.3f;
             var H = camera.CameraBounds.width / 8;
             D += !player.Ani.Flipped ? H : -H;
             var C = App.Canvas;
@@ -1104,11 +1176,13 @@ namespace CirnoGame
             float V = Math.Max(0, player.Vspeed * 30);
             if (player.Controller[2])
             {
-                V -= camera.CameraBounds.height / 4;
+                //V -= camera.CameraBounds.height / 4;
+                V -= camera.CameraBounds.height / 3;
             }
             else if (player.Controller[3])
             {
-                V += camera.CameraBounds.height / 4;
+                //V += camera.CameraBounds.height / 4;
+                V += camera.CameraBounds.height / 3;
             }
             else if (player.onGround)
             {
@@ -1125,8 +1199,8 @@ namespace CirnoGame
             TP.Y = (float)Math.Max(0, (test.y + V) - ((C.Height / 2) * IS));*/
             /*TP.X = test.x;
             TP.Y = test.y;*/
-            var X = player.x + (player.Width / 2) + D;
-            var Y = player.y + (player.Height / 2) + V;
+            var X = player.x + (player.Width / 2) + (D * lookAheadRate);
+            var Y = player.y + (player.Height / 2) + (V * lookAheadRate);
             camera.CenteredTargetPosition = new Vector2(X, Y);
             camera.Update();
         }

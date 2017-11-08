@@ -11,16 +11,16 @@ namespace CirnoGame
         public Orb(Game game) : base(game, "orb")
         {
             //Ani = new Animation(AnimationLoader.Get("images/misc/orb"));
-
+            magnetDistance = 55;
         }
         public override void onCollected(PlayerCharacter player)
         {
             //throw new NotImplementedException();
-            var time = (1000) * 20;
+            var time = (1000) * (13 - Math.Min(Game.level-1 * 0.15f,7));
             if (Game.timeRemaining > 0)
             {
                 Game.timeRemaining += time;
-                Game.timeRemaining = Math.Min(Game.maxTimeRemaining, Game.timeRemaining);
+                Game.timeRemaining = Math.Min(Game.defaultTimeRemaining, Game.timeRemaining);
             }
             else
             {

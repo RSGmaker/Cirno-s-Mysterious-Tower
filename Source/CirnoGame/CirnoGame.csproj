@@ -53,6 +53,7 @@
     <Compile Include="ControllableEntity.cs" />
     <Compile Include="DoorKey.cs" />
     <Compile Include="Enemies\MRGhosty.cs" />
+    <Compile Include="Enemies\Turret.cs" />
     <Compile Include="Entity.cs" />
     <Compile Include="EntityBehavior.cs" />
     <Compile Include="ExitDoor.cs" />

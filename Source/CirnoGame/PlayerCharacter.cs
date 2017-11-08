@@ -18,11 +18,15 @@ namespace CirnoGame
         public int score = 0;
         public int orbs = 0;
         public int keys = 0;
+        public float energyRecharge = 0.022f;
+        public float maxEnergy = 4;
+        public float energy = 4;
 
         public int Team { get; set; }
 
         public float maxHP = 20;
         public float HP { get; set; }
+        public float regenRate = 1f;
         public Vector2 SpawnLocation = new Vector2();
         public int lives = 3;
         public int frame = 0;
@@ -32,7 +36,7 @@ namespace CirnoGame
         public float defensepower = 1f;
 
         public float invincibilitytime = 0;
-        public float blockprice = 9f;
+        public float blockprice = 4f;
 
         public float invincibilitymod = 1f;
 
@@ -67,6 +71,10 @@ namespace CirnoGame
 
         public void shoot()
         {
+            if (energy < 1)
+            {
+                return;
+            }
             if (shoottime < 1)
             {
                 prefix = "s";
@@ -76,13 +84,16 @@ namespace CirnoGame
             {
                 currentshot = 1;
                 DoShot();
+                energy -= 1;
                 //shootRecharge = 12;
                 
                 currentshotdelay = 0;
-                shootRecharge = 20;
-                
+                //shootRecharge = 20;
+                shootRecharge = 16;
+
             }
             shoottime = 50;
+            //shoottime = 40;
             turntime = 0;
 
         }
@@ -131,7 +142,8 @@ namespace CirnoGame
         public PlayerCharacter(Game game) : base(game)
         {
             ChangeAni("stand");
-            AddBehavior(new PlatformerControls(this));
+            AddBehavior<PlatformerControls>();
+            //AddBehavior(new PlatformerControls(this));
             tapTimer = new int[Controller.Length];
             Team = 0;
             HP = maxHP;
@@ -161,10 +173,7 @@ namespace CirnoGame
                     prefix = "";
                 }
             }
-            if (shootRecharge > 0)
-            {
-                shootRecharge--;
-            }
+            
             if (onGround)
             {
                 if (Hspeed != 0)
@@ -210,11 +219,20 @@ namespace CirnoGame
                     DoShot();
                 }
             }
+            else
+            {
+                if (shootRecharge > 0)
+                {
+                    shootRecharge--;
+                }
+                energy = Math.Min(energy + energyRecharge, maxEnergy);
+            }
             if (Controller[4])
             {
                 turntime = 0;
             }
-            if (Pressed(4))
+            //if (Pressed(4))
+            if (Controller[4])
             {
                 shoot();
             }
@@ -226,7 +244,8 @@ namespace CirnoGame
             UpdateController();
             //if (turntime > 22 && Hspeed != 0)
             //if (turntime > 18 && Hspeed != 0)
-            if (turntime > 14 && Hspeed != 0)
+            //if (turntime > 14 && Hspeed != 0)
+            if (turntime > 8 && Hspeed != 0)
             {
                 Ani.Flipped = Hspeed < 0;
             }
@@ -241,6 +260,21 @@ namespace CirnoGame
             {
                 Visible = true;
             }
+            //if (Game.timeRemaining > 0 && HP>0 && invincibilitytime<=0 && HP<maxHP && Game.timeRemaining < Game.defaultTimeRemaining)
+            /*if (Game.timeRemaining > 0 && HP > 0 && invincibilitytime <= 0 && HP < maxHP && Game.timeRemaining < Game.lastStand)
+            {
+                var staticMod = 0.005f;
+                var HPRate = 1-(HP / maxHP);
+                var TimeRate = 1-(Game.timeRemaining / Game.defaultTimeRemaining);
+                var rate = (HPRate * TimeRate * regenRate);
+                HP += (rate * staticMod);
+                if (HP > maxHP)
+                {
+                    HP = maxHP;
+                }
+            }*/
+
+            
             frame++;
         }
         public void PlaceBlock()
@@ -316,7 +350,7 @@ namespace CirnoGame
             if (invincibilitytime <= 0)
             {
                 HP -= (amount / defensepower);
-                invincibilitytime = 45*invincibilitymod;
+                invincibilitytime = 50*invincibilitymod;
             }
         }
         public override void onRemove()
@@ -332,11 +366,16 @@ namespace CirnoGame
 
             if (Game.player == this)
             {
-                if (Game.timeRemaining > 0)
+                //if (Game.timeRemaining > 0)
+                if (Game.timeRemaining>=Game.baseLifeCost)
                 {
                     Position.CopyFrom(SpawnLocation);
                     HP = maxHP;
-                    Game.timeRemaining *= 0.6667f;
+                    Game.timeRemaining -= Game.baseLifeCost;
+                    //Game.timeRemaining *= 0.85f;
+                    //Game.timeRemaining *= 0.6667f;
+                    Game.camera.instawarp = true;
+                    Game.skiprender = true;
                 }
                 else
                 {

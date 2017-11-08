@@ -17,6 +17,7 @@ namespace CirnoGame
         public Game Game;
         protected List<EntityBehavior> _behaviors;
         protected List<int> _behaviorTicks;
+        public Dictionary<string, dynamic> data = new Dictionary<string, dynamic>();
         public int ZOrder = 0;
         //public double ID;
         public string ID;
@@ -116,7 +117,7 @@ namespace CirnoGame
             _behaviors.Add(behavior);
             _behaviorTicks.Add(0);
         }
-        public void AddBehavior<T>()
+        public T AddBehavior<T>()
         {
             if (_behaviors == null)
             {
@@ -126,6 +127,7 @@ namespace CirnoGame
             var B = Activator.CreateInstance(typeof(T), this);
             _behaviors.Add((EntityBehavior)B);
             _behaviorTicks.Add(0);
+            return B.As<dynamic>();
             /*if (B is EntityBehavior)
             {
                 _behaviors.Add((EntityBehavior)B);
@@ -298,11 +300,16 @@ namespace CirnoGame
             this.Game = game;
         }
 
+        protected Rectangle HitboxBuffer = new Rectangle();
+
         public virtual Rectangle GetHitbox()
         {
             if (Ani != null && Ani.CurrentImage != null)
             {
-                return new Rectangle(Ani.X, Ani.Y, Ani.CurrentImage.Width, Ani.CurrentImage.Height);
+                //return new Rectangle(Ani.X, Ani.Y, Ani.CurrentImage.Width, Ani.CurrentImage.Height);
+                var CI = Ani.CurrentImage;
+                HitboxBuffer.Set(Ani.X, Ani.Y, CI.Width, CI.Height);
+                return HitboxBuffer;
             }
             return null;
         }

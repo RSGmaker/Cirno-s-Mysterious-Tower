@@ -188,6 +188,10 @@ namespace CirnoGame
         {
             Floor = GetFloor();
             Ceiling = GetCeiling();
+            if (Floor != null && Floor.SteppedOn.As<dynamic>())
+            {
+                Floor.SteppedOn(this);
+            }
 
 
             if (Vspeed < maxFallSpeed && GravityEnabled)

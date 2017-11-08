@@ -8,6 +8,7 @@ namespace CirnoGame
 {
     class HealingItem : CollectableItem
     {
+        public float healingPower = 1.5f;
         public HealingItem(Game game) : base(game, "heart")
         {
             floats = false;
@@ -21,7 +22,7 @@ namespace CirnoGame
 
         public override void onCollected(PlayerCharacter player)
         {
-            player.HP = Math.Min(player.HP + 1, player.maxHP);
+            player.HP = Math.Min(player.HP + healingPower, player.maxHP);
         }
     }
 }

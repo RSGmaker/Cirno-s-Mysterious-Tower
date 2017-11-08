@@ -19,6 +19,7 @@ namespace CirnoGame
         public bool Bounces;
         public bool attacksterrain = false;
         public float digpower = 0.5f;
+        public bool ignoresterrain = false;
         public PlayerBullet(Game game, Entity shooter, string graphic = "Reisenbullet") : base(game)
         {
             Ani = new Animation(AnimationLoader._this.GetAnimation(graphic));
@@ -145,48 +146,51 @@ namespace CirnoGame
             }
             //Vector2 center = getCenter();
             Vector2 center = Vector2.Add(Position, 8, 0);
-            TileData T = null;
-            if (!Bounces)
+            if (!ignoresterrain)
             {
-                T = Game.TM.CheckForTile(new Vector2(center.X, y));
-            }
-            if (T != null && T.enabled && T.solid)
-            {
-                if (attacksterrain)
+                TileData T = null;
+                if (!Bounces)
                 {
-                    if (T.Breakable)
+                    T = Game.TM.CheckForTile(new Vector2(center.X, y));
+                }
+                if (T != null && T.enabled && T.solid)
+                {
+                    if (attacksterrain)
                     {
-                        //T.Damage(_touchDamage * digpower);
-                        if (T.Damage(digpower))
-                            PlaySound("thunk4");
+                        if (T.Breakable)
+                        {
+                            //T.Damage(_touchDamage * digpower);
+                            if (T.Damage(digpower))
+                                PlaySound("thunk4");
+                            else
+                                PlaySound("thunk");
+                        }
                         else
-                            PlaySound("thunk");
+                            PlaySound("plink");
                     }
-                    else
-                        PlaySound("plink");
+                    Alive = false;
                 }
-                Alive = false;
-            }
-            else if (Bounces)
-            {
-
-                T = Game.TM.CheckForTile(center + new Vector2(Speed.X));
-                if (T != null && T.enabled && T.solidToSpeed(Speed.ToCardinal()))
+                else if (Bounces)
                 {
-                    Speed.X = -Speed.X;
-                }
 
-                T = Game.TM.CheckForTile(center + new Vector2(0, Speed.Y));
-                if (T != null && T.enabled && T.solidToSpeed(Speed.ToCardinal()))
-                {
-                    Speed.Y = -Speed.Y;
-                }
+                    T = Game.TM.CheckForTile(center + new Vector2(Speed.X));
+                    if (T != null && T.enabled && T.solidToSpeed(Speed.ToCardinal()))
+                    {
+                        Speed.X = -Speed.X;
+                    }
 
-                T = Game.TM.CheckForTile(center + Speed);
-                if (T != null && T.enabled && T.solidToSpeed(Speed.ToCardinal()))
-                {
-                    Speed.X = -Speed.X;
-                    Speed.Y = -Speed.Y;
+                    T = Game.TM.CheckForTile(center + new Vector2(0, Speed.Y));
+                    if (T != null && T.enabled && T.solidToSpeed(Speed.ToCardinal()))
+                    {
+                        Speed.Y = -Speed.Y;
+                    }
+
+                    T = Game.TM.CheckForTile(center + Speed);
+                    if (T != null && T.enabled && T.solidToSpeed(Speed.ToCardinal()))
+                    {
+                        Speed.X = -Speed.X;
+                        Speed.Y = -Speed.Y;
+                    }
                 }
             }
             if (Duration > 0)

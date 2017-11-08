@@ -289,8 +289,9 @@ namespace CirnoGame
 
             //float entropy = 0.8f;
             //float entropy = 0.45f;
-            float entropy = 0.60f;
-            int max = (int)(rows * entropy);
+            //float entropy = 0.60f;
+            ///float entropy = 0.50f;
+            ////int max = (int)(rows * entropy);
             //int smoothnessSize = 12;
 
             int X = 0;
@@ -300,7 +301,8 @@ namespace CirnoGame
             int row = SY;
             int column = SX;
             TileData LT = null;
-            float bridgeChance = 0.90f;
+            //float bridgeChance = 0.90f;
+            ///float bridgeChance = 0.95f;
             int RNDbridge = 0;
 
             while (row < EY)
@@ -348,32 +350,39 @@ namespace CirnoGame
                         }
                         else*/
                         {
-                            if (RNDbridge < 1 && RND.NextDouble() < 0.015)
+                            if (RNDbridge < 1 && RND.NextDouble() < 0.030)
                             {
                                 //RNDbridge = RND.Next(8);
-                                RNDbridge = RND.Next(6);
+                                RNDbridge = 2+RND.Next(4);
+                                /*if (Math.Random() < 0.9)
+                                {
+                                    RNDbridge += 1;
+                                }*/
                             }
                             if (RNDbridge > 0)
                             {
                                 T.enabled = true;
                                 T.topSolid = T.enabled;
+                                T.CanSlope = true;
                                 RNDbridge--;
                                 //}else if (RND.NextDouble() < 0.025)
                             }
                             //else if (RND.NextDouble() < 0.035)
                             //else if (RND.NextDouble() < 0.04)
-                            else if (RND.NextDouble() < 0.045)
+                            //else if (RND.NextDouble() < 0.045)
+                            else if (RND.NextDouble() < 0.030)
                             {
                                 T.enabled = true;
                                 T.topSolid = T.enabled;
+                                T.CanSlope = true;
                             }
 
                         }
                     }
-                    if (!T.enabled || T.texture != 1)
+                    /*if (!T.enabled || T.texture != 1)
                     {
                         bridgeChance = 0.90f;
-                    }
+                    }*/
                     T.visible = T.enabled;
                     T.map = this;
                     T.solid = true;
@@ -845,11 +854,30 @@ namespace CirnoGame
             int row = SY;
             int column = SX;
             var BG = tiles[2];
-            var BG2 = tiles[3];
+            //var BG2 = tiles[3];
+            var BG2 = new HTMLImageElement[] { tiles[3], tiles[9], tiles[10] };
             var tilesC = tiles.Count;
 
             Rectangle R = new Rectangle();
             var doorroom = MapGenerator.doorroom;
+            var keyroom = MapGenerator.keyroom;
+            var doorroomcolor = "#000000";
+            //var keyroomcolor = "#CC0000";
+            //var keyroomcolor = "#118822";
+            var keyroomcolor = "#558822";
+
+            var gradcolor = "#000077";
+            ///var Agradcolor = "#118822";
+            var Agradcolor = "#CC0000";
+
+            var DX = 0;
+            var DY = 0;
+
+            if (doorroom != null)
+            {
+                DX = (doorroom.SX + doorroom.EX) / 2;
+                DY = (doorroom.SY + doorroom.EY) / 2;
+            }
 
             while (row < EY)
             {
@@ -896,32 +924,168 @@ namespace CirnoGame
                                 g.Fill();
 
                                 g.GlobalCompositeOperation = CanvasTypes.CanvasCompositeOperationType.DestinationOver;
-                                if (doorroom!=null && doorroom.ContainsTile(column, row))
+                                /*if (doorroom!=null && doorroom.ContainsTile(column, row))
                                 {
-                                    g.GlobalAlpha = 0.5f;
-                                    g.FillStyle = "#000000";
+                                    g.GlobalAlpha = 0.55f;
+                                    g.FillStyle = doorroomcolor;
                                     //g.FillRect(R.x.ToDynamic(), R.y.ToDynamic(), R.width.ToDynamic(), R.height.ToDynamic());
                                     g.FillRect(X.ToDynamic(), Y.ToDynamic(), tilesize.ToDynamic(), tilesize.ToDynamic());
                                     g.GlobalAlpha = 1f;
+                                }
+                                else */if (keyroom != null && keyroom.ContainsTile(column, row))
+                                {
+                                    g.GlobalAlpha = 0.17f;
+                                    g.FillStyle = keyroomcolor;
+                                    //g.FillRect(R.x.ToDynamic(), R.y.ToDynamic(), R.width.ToDynamic(), R.height.ToDynamic());
+                                    g.FillRect(X.ToDynamic(), Y.ToDynamic(), tilesize.ToDynamic(), tilesize.ToDynamic());
+                                    g.GlobalAlpha = 1f;
+                                }
+                                else if (doorroom!=null)
+                                {
+                                    var Dist = Math.Max(Math.Abs(column - DX) + Math.Abs(row - DY) - 5, 0);
+                                    var A = 0.5f - (Dist * 0.03f);
+                                    var G = gradcolor;
+                                    if (A < 0)
+                                    {
+                                        //A = Math.Min((-A * 0.50f) - 0.22f, 0.30f);
+                                        A = (-A * 0.50f) - 0.22f;
+                                        G = Agradcolor;
+                                        if (A > 0.3f)
+                                        {
+                                            A = 0.6f - A;
+                                            if (A < 0)
+                                            {
+                                                /*A = -A;*/
+                                                G = gradcolor;
+                                                A = 0;
+                                            }
+                                        }
+
+                                    }
+                                    if (A > 0)
+                                    {
+                                        g.GlobalAlpha = A;
+                                        g.FillStyle = G;
+                                        g.FillRect(X.ToDynamic(), Y.ToDynamic(), tilesize.ToDynamic(), tilesize.ToDynamic());
+                                        g.GlobalAlpha = 1f;
+                                    }
                                 }
                                 g.DrawImage(BG, X, Y);
                                 g.GlobalCompositeOperation = CanvasTypes.CanvasCompositeOperationType.SourceOver;
                                 
                             }
+                            else if (!T.opaque)
+                            {
+                                g.GlobalCompositeOperation = CanvasTypes.CanvasCompositeOperationType.DestinationOver;
+                                /*if (doorroom!=null && doorroom.ContainsTile(column, row))
+                                {
+                                    g.GlobalAlpha = 0.55f;
+                                    g.FillStyle = doorroomcolor;
+                                    //g.FillRect(R.x.ToDynamic(), R.y.ToDynamic(), R.width.ToDynamic(), R.height.ToDynamic());
+                                    g.FillRect(X.ToDynamic(), Y.ToDynamic(), tilesize.ToDynamic(), tilesize.ToDynamic());
+                                    g.GlobalAlpha = 1f;
+                                }
+                                else */
+                                if (keyroom != null && keyroom.ContainsTile(column, row))
+                                {
+                                    g.GlobalAlpha = 0.17f;
+                                    g.FillStyle = keyroomcolor;
+                                    //g.FillRect(R.x.ToDynamic(), R.y.ToDynamic(), R.width.ToDynamic(), R.height.ToDynamic());
+                                    g.FillRect(X.ToDynamic(), Y.ToDynamic(), tilesize.ToDynamic(), tilesize.ToDynamic());
+                                    g.GlobalAlpha = 1f;
+                                }
+                                else if (doorroom != null)
+                                {
+                                    var Dist = Math.Max(Math.Abs(column - DX) + Math.Abs(row - DY) - 5, 0);
+                                    var A = 0.5f - (Dist * 0.03f);
+                                    var G = gradcolor;
+                                    if (A < 0)
+                                    {
+                                        //A = Math.Min((-A * 0.50f) - 0.22f, 0.30f);
+                                        A = (-A * 0.50f) - 0.22f;
+                                        G = Agradcolor;
+                                        if (A > 0.3f)
+                                        {
+                                            A = 0.6f - A;
+                                            if (A < 0)
+                                            {
+                                                /*A = -A;*/
+                                                G = gradcolor;
+                                                A = 0;
+                                            }
+                                        }
+
+                                    }
+                                    if (A > 0)
+                                    {
+                                        g.GlobalAlpha = A;
+                                        g.FillStyle = G;
+                                        g.FillRect(X.ToDynamic(), Y.ToDynamic(), tilesize.ToDynamic(), tilesize.ToDynamic());
+                                        g.GlobalAlpha = 1f;
+                                    }
+                                }
+                                
+                                g.DrawImage(BG, X, Y);
+                                g.GlobalCompositeOperation = CanvasTypes.CanvasCompositeOperationType.SourceOver;
+                            }
 
                         }
                         else
                         {
-                            g.DrawImage(Math.Random() < 0.98 ? BG : BG2, X, Y);
-                            if (doorroom != null && doorroom.ContainsTile(column, row))
+                            var texture = BG;
+                            //if (Math.Random() >= 0.98)
+                            if (Math.Random() >= 0.97)
+                            {
+                                texture = BG2.Pick();
+                            }
+                            //g.DrawImage(Math.Random() < 0.98 ? BG : BG2, X, Y);
+                            g.DrawImage(texture, X, Y);
+                            /*if (doorroom != null && doorroom.ContainsTile(column, row))
+                            {
+                                g.GlobalAlpha = 0.55f;
+                                g.FillStyle = doorroomcolor;
+                                g.FillRect(X.ToDynamic(), Y.ToDynamic(), tilesize.ToDynamic(), tilesize.ToDynamic());
+                                g.GlobalAlpha = 1f;
+                            }
+                            else */if (keyroom != null && keyroom.ContainsTile(column, row))
                             {
                                 /*T.GetHitbox2(R);
                                 R.x -= position.X;
                                 R.y -= position.Y;*/
-                                g.GlobalAlpha = 0.5f;
-                                g.FillStyle = "#000000";
+                                g.GlobalAlpha = 0.17f;
+                                g.FillStyle = keyroomcolor;
                                 g.FillRect(X.ToDynamic(), Y.ToDynamic(), tilesize.ToDynamic(), tilesize.ToDynamic());
                                 g.GlobalAlpha = 1f;
+                            }
+                            else if (doorroom != null)
+                            {
+                                var Dist = Math.Max(Math.Abs(column - DX) + Math.Abs(row - DY)-5,0);
+                                var A = 0.5f - (Dist * 0.03f);
+                                var G = gradcolor;
+                                if (A < 0)
+                                {
+                                    //A = Math.Min((-A * 0.50f) - 0.22f, 0.30f);
+                                    A = (-A * 0.50f) - 0.22f;
+                                    G = Agradcolor;
+                                    if (A > 0.3f)
+                                    {
+                                        A = 0.6f - A;
+                                        if (A < 0)
+                                        {
+                                            /*A = -A;*/
+                                            G = gradcolor;
+                                            A = 0;
+                                        }
+                                    }
+                                    
+                                }
+                                if (A > 0)
+                                {
+                                    g.GlobalAlpha = A;
+                                    g.FillStyle = G;
+                                    g.FillRect(X.ToDynamic(), Y.ToDynamic(), tilesize.ToDynamic(), tilesize.ToDynamic());
+                                    g.GlobalAlpha = 1f;
+                                }
                             }
                         }
                     }
@@ -938,23 +1102,34 @@ namespace CirnoGame
         {
             int row = Y - 2;
             int column = X - 2;
+            TileData[] TDRaw = data.As<TileData[]>();
+            int ind = 0;
+            int lind = 0;
+
+            ind = column * rows;
+            ind += row;
 
             while (row <= Y + 2)
             {
+                lind = ind;
                 while (column <= X + 2)
                 {
                     /*var T = data[column, row];
                     T.texture = Math.Random() < 0.5 ? 0 : 1;*/
                     if (row >= 0 && column >= 0 && row < rows && column < columns)
                     {
-                        var T = data[column, row];
+                        //var T = data[column, row];
+                        var T = TDRaw[ind];
                         if (!T.enabled || !T.solid)
                         {
                             return true;
                         }
                     }
                     column++;
+                    ind += rows;
                 }
+                ind = lind;
+                ind += 1;
                 row++;
                 column = X - 2;
             }
@@ -1026,18 +1201,25 @@ namespace CirnoGame
         {
             int row = 0;
             int column = 0;
+            TileData[] TDRaw = data.As<TileData[]>();
+            int ind = 0;
+            int lind = 0;
 
             while (row < rows)
             {
+                lind = ind;
                 while (column < columns)
                 {
                     /*var T = data[column, row];
                     T.texture = Math.Random() < 0.5 ? 0 : 1;*/
-                    var T = data[column, row];
+
+                    var T = TDRaw[ind];
+                    //var T = data[column, row];
                     var TT = T.Clone();
                     TT.column = column;
                     TT.row = row;
-                    data[column, row] = TT;
+                    //data[column, row] = TT;
+                    TDRaw[ind] = TT;
                     T = TT;
                     if (IsExposed(column, row))
                     {
@@ -1054,9 +1236,14 @@ namespace CirnoGame
                         T.Breakable = false;
                     }
                     column++;
+                    ind += rows;
                 }
+                ind = lind;
                 row++;
+                //ind -= (columns * rows);
                 column = 0;
+                
+                ind += 1;
             }
             needRedraw = true;
         }

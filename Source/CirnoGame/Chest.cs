@@ -12,6 +12,10 @@ namespace CirnoGame
         {
             Ani = new Animation(AnimationLoader._this.GetAnimation("images/misc/chest"));
             Ani.ImageSpeed = 0;
+            if (Math.Random() < 0.15)
+            {
+                Heartify();
+            }
         }
         public void Goldify()
         {
@@ -20,10 +24,20 @@ namespace CirnoGame
             Ani.ImageSpeed = 0;
             Ani.Position.CopyFrom(P);
             Golden = true;
+            Heart = false;
+        }
+        public void Heartify()
+        {
+            var P = Ani.Position;
+            Ani = new Animation(AnimationLoader._this.GetAnimation("images/misc/pinkchest"));
+            Ani.ImageSpeed = 0;
+            Ani.Position.CopyFrom(P);
+            Heart = true;
         }
         public bool ForceLocked = false;
         public bool Golden { get; private set; }
         public bool Opened { get; private set; }
+        public bool Heart { get; private set; }
         public override void Update()
         {
             base.Update();
@@ -77,39 +91,58 @@ namespace CirnoGame
                 {
                     var common = new string[] { "point", "point", "point", "point", "point", "point", "heart", "heart", "tripleheart", "singleorb" };
                     var rare = new string[] { "attackpower", "defensepower", "mining" };
-                    var legendary = new string[] { "triplejump", "cheaperblocks", "invincibility", "repeater" };
+                    var legendary = new string[] { "triplejump", "cheaperblocks", "invincibility", "repeater","movespeed" };
 
+                    var heartTable = new string[] { "supertripleheart" };
 
 
                     var R = Math.Random();
                     string C;
-
-                    if (picker == null || Math.Random() < 0.2)
+                    if (Heart)
                     {
-                        if (R < 0.70 && !Golden)
+                        C = heartTable.Pick();
+                        S = "common";
+                        color = "#FFFFFF";
+                    }
+                    else
+                    {
+                        if (picker == null || Math.Random() < 0.20)
                         {
-                            picker = common;
-                            S = "common";
-                            color = "#FFFFFF";
-                        }
-                        else
-                        {
-                            R = Math.Random();
-                            if (R < 0.91)
+                            if (R < 0.60 && !Golden)
                             {
-                                picker = rare;
-                                S = "rare";
-                                color = "#FFBB33";
+                                picker = common;
+                                S = "common";
+                                color = "#FFFFFF";
                             }
                             else
                             {
-                                picker = legendary;
-                                S = "legendary";
-                                color = "#FF55FF";
+                                R = Math.Random();
+                                if (R < 0.91)
+                                {
+                                    picker = rare;
+                                    S = "rare";
+                                    color = "#FFBB33";
+                                }
+                                else
+                                {
+                                    picker = legendary;
+                                    S = "legendary";
+                                    color = "#FF55FF";
+                                }
                             }
                         }
+                        if (true)
+                        {
+                            C = picker.Pick();
+                        }
+                        else
+                        {
+                            picker = legendary;
+                            S = "legendary";
+                            color = "#FF55FF";
+                            C = "movespeed";
+                        }
                     }
-                    C = picker.Pick();
                     ok = false;
                     CollectableItem CI;
                     switch (C)
@@ -147,7 +180,7 @@ namespace CirnoGame
                             M = "Heal";
                             break;
                         case "tripleheart":
-                            if (player.HP > player.maxHP / 3)
+                            if ((player.HP > player.maxHP / 3) && !Heart)
                             {
                                 ok = true;
                                 break;
@@ -173,6 +206,37 @@ namespace CirnoGame
                             H1.collectionDelay = 30;
                             Game.AddEntity(H1);
                             M = "Heal x3";
+                            break;
+                        case "supertripleheart":
+                            if ((player.HP > player.maxHP / 3) && !Heart)
+                            {
+                                ok = true;
+                                break;
+                            }
+                            H1 = new HealingItem(Game);
+                            H1.Position.CopyFrom(Position);
+                            H1.Vspeed = -2f;
+                            H1.Hspeed = -2f;
+                            H1.healingPower *= 1.5f;
+                            H1.collectionDelay = 30;
+                            Game.AddEntity(H1);
+
+                            H1 = new HealingItem(Game);
+                            H1.Position.CopyFrom(Position);
+                            H1.Vspeed = -2f;
+                            H1.Hspeed = 0;
+                            H1.healingPower *= 1.5f;
+                            H1.collectionDelay = 30;
+                            Game.AddEntity(H1);
+
+                            H1 = new HealingItem(Game);
+                            H1.Position.CopyFrom(Position);
+                            H1.Vspeed = -2f;
+                            H1.Hspeed = 2f;
+                            H1.healingPower *= 1.5f;
+                            H1.collectionDelay = 30;
+                            Game.AddEntity(H1);
+                            M = "Heal+";
                             break;
                         case "singleorb":
                             if (Game.timeRemaining > 0)
@@ -220,13 +284,25 @@ namespace CirnoGame
                             M = "Triple Jump";
                             break;
                         case "cheaperblocks":
-                            if (player.blockprice != 9)
+                            if (player.blockprice != 4)
                             {
                                 ok = true;
                                 break;
                             }
-                            player.blockprice = 6;
+                            player.blockprice = 1;
                             M = "Blocks are cheaper now";
+                            break;
+                        case "movespeed":
+                            if (player.data.ContainsKey("movespeed"))
+                            {
+                                ok = true;
+                                break;
+                            }
+                            player.data["movespeed"] = true;
+                            var Plat = player.GetBehavior<PlatformerControls>();
+                            Plat.maxSpeed *= 1.07f;
+                            Plat.accel *= 1.07f;
+                            M = "Movement speed+";
                             break;
                         case "invincibility":
                             if (player.invincibilitymod != 1)

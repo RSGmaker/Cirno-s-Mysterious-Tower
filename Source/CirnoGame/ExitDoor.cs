@@ -86,6 +86,17 @@ namespace CirnoGame
             {
                 Opened = false;
                 P.score += (Game.level * 10);
+
+                var time = (1000) * 13;
+                if (Game.timeRemaining > 0)
+                {
+                    Game.timeRemaining += time;
+                    Game.timeRemaining = Math.Min(Game.defaultTimeRemaining, Game.timeRemaining);
+                }
+                else
+                {
+                    Game.timeRemaining += time;
+                }
                 Game.StartNextLevel();
 
                 /*P.keys--;
