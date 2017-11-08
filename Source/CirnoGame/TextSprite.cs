@@ -240,6 +240,11 @@ namespace CirnoGame
             /*spriteGraphics.FillStyle = _TextColor;
             spriteGraphics.FillRect(0, 0, spriteBuffer.Width, spriteBuffer.Height);
             Script.Write("this.spriteGraphics.globalCompositeOperation = 'destination-in'");*/
+            if (TextImage.Width <= 0)
+            {
+                imageInvallidated = false;
+                return;
+            }
             if (_shadowBlur <= 0)
             {
                 spriteGraphics.DrawImage(TextImage, 0f, 0f);
