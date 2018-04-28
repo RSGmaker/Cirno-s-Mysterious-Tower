@@ -32,7 +32,7 @@ namespace CirnoGame
         public static GameSprite CurrentView;
 
         public static string GameName = "Cirno's Mysterious Tower";
-        public static string GameVersion = "0.3";
+        public static string GameVersion = "0.4";
         /*#if DEBUG
                 public static bool DEBUG = true;
         #else

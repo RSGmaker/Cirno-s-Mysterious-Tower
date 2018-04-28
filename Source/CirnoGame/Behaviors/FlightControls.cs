@@ -9,7 +9,7 @@ namespace CirnoGame
     public class FlightControls : EntityBehavior
     {
         public float accel = 0.35f;
-        public float maxSpeed = 1.5f;
+        public float maxSpeed = 1.7f;
         PlatformerEntity _platformer;
 
         public FlightControls(PlatformerEntity entity) : base(entity)

@@ -15,7 +15,7 @@ namespace CirnoGame
             Ani = new Animation(AnimationLoader._this.GetAnimation("images/enemies/turret"));
             Ani.ImageSpeed = 0;
 
-            attackpower = 1 + (Game.level * 0.5f);
+            attackpower = 1 + (Game.level * 0.55f);
             attackpower *= 2;
             HP = 0;
             Team = 2;
@@ -80,8 +80,9 @@ namespace CirnoGame
 
         public void SetDown(bool forcedown = false)
         {
-            var TZ = Game.TM.tilesize;
-            var TD = Game.TM.CheckForTile(Position);
+            var TM = Game.TM;
+            var TZ = TM.tilesize;
+            var TD = TM.CheckForTile(Position);
             var attempts = 0;
             var direction = Math.Random() < 0.5 ? TZ : -TZ;
             if (forcedown)
@@ -91,7 +92,7 @@ namespace CirnoGame
             while (!(TD != null && TD.solid && TD.visible) && attempts<20)
             {
                 y += direction;
-                TD = Game.TM.CheckForTile(Position);
+                TD = TM.CheckForTile(Position);
             }
             if (attempts >= 20)
             {
@@ -100,8 +101,8 @@ namespace CirnoGame
             }
             else
             {
-                x = (TD.column * TZ) + Game.TM.position.X;
-                y = (TD.row * TZ) + Game.TM.position.Y;
+                x = (TD.column * TZ) + TM.position.X;
+                y = (TD.row * TZ) + TM.position.Y;
                 //TD.HP = TD.maxHP * 2;
             }
             TTD = TD;

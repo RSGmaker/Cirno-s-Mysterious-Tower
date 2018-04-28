@@ -20,12 +20,16 @@ namespace CirnoGame
         public GamePlaySettings GamePlaySettings;
 
         public TextSprite TimerSprite;
+        public TextSprite StatsSprite;
 
-        public float defaultTimeRemaining = 1000 * 60 * 3;//3 minutes
+        //public float defaultTimeRemaining = (float)(1000 * 60 * 0.5f);//half a minutes
+        public float defaultTimeRemaining = (1000 * 60) * 2.5f;//2 minutes 30 seconds
+        //public float defaultTimeRemaining = 1000 * 60 * 3;//3 minutes
         //public float maxTimeRemaining = 1000 * 60 * 5;//3 minutes
         public float lastStand = 1000 * 30;
         public float baseLifeCost = 1000 * 15;
         public float timeRemaining;
+        public float displayTimeRemaining;
         public float totalTime = 0;
         public int level = 0;
         public bool playing = false;
@@ -38,7 +42,7 @@ namespace CirnoGame
         {
             get
             {
-                return playing && !paused;
+                return playing && !paused && fadein<=0 && generator==null;
             }
         }
         public bool skiprender = true;
@@ -51,6 +55,9 @@ namespace CirnoGame
 
         public HTMLImageElement Key;
         public HTMLImageElement BigKey;
+
+        bool hasLevel = false;
+        MapGenerator generator=null;
         public Game()
         {
             GamePlaySettings = new GamePlaySettings();
@@ -62,6 +69,7 @@ namespace CirnoGame
             player = new PlayerCharacter(this);
             player.HP = 0;
             timeRemaining = defaultTimeRemaining;
+            displayTimeRemaining = timeRemaining;
             //timeRemaining *= 0.3334f * 0.25f;
 
             /*test.Ani = new Animation(AnimationLoader._this.Get("images/cirno/walk"));
@@ -135,7 +143,8 @@ namespace CirnoGame
             ///camera.Scale = 5;
             //camera.Scale = 4;
             //camera.Scale = 3.5f;
-            camera.Scale = 3.75f;
+            //camera.Scale = 3.75f;
+            camera.Scale = 3.5f;
 
             //camera.Scale = 1f;
             camera.StageBounds = stageBounds;
@@ -173,7 +182,7 @@ namespace CirnoGame
 
             TimerSprite = new TextSprite();
             TimerSprite.FontSize = spriteBuffer.Height / 24;
-            TimerSprite.Text = "3:00";
+            TimerSprite.Text = "2:30";
             TimerSprite.TextColor = "#FFFFFF";
             TimerSprite.ShadowColor = "#000000";
             TimerSprite.ShadowOffset = new Vector2(3, 3);
@@ -181,6 +190,20 @@ namespace CirnoGame
 
             TimerSprite.Position.X = spriteBuffer.Width * 0.47f;
             TimerSprite.Position.Y = -TimerSprite.FontSize / 8;
+
+
+            StatsSprite = new TextSprite();
+            StatsSprite.FontSize = spriteBuffer.Height / 40;
+            StatsSprite.Text = "";
+            StatsSprite.TextColor = "#FFFFFF";
+            StatsSprite.ShadowColor = "#000000";
+            StatsSprite.ShadowOffset = new Vector2(3, 3);
+            StatsSprite.ShadowBlur = 1;
+
+            //StatsSprite.Position.X = spriteBuffer.Width * 0.47f;
+            StatsSprite.Position.X = spriteBuffer.Width * 0.01f;
+            StatsSprite.Position.Y = (spriteBuffer.Height * 0.97f) + ((-StatsSprite.FontSize / 8)*2);
+            StatsSprite.Visible = false;
 
             ScoreSprite = new TextSprite();
             //ScoreSprite.FontSize = spriteBuffer.Height / 24;
@@ -230,13 +253,37 @@ namespace CirnoGame
             R.width -= TM.tilesize;
             R.height -= TM.tilesize;
             TM.Generate();
-            MapGenerator.BoxyGenerate(this);
+            if (!hasLevel)
+            {
+                var MP = new MapGenerator();
+                MP.game = this;
+                MP.forceGeneration();
+                generator = null;
+
+                hasLevel = true;
+
+
+                finalizeLevel();
+            }
+            else
+            {
+                generator = new MapGenerator();
+                generator.game = this;
+                fadein = 0.8f;
+                generator.Generate(3);
+
+                //MapGenerator.BoxyGenerate(this);
+            }
+            
+        }
+        void finalizeLevel()
+        {
             //TM.DrawRect(R);
             //TM.ApplyBreakable();
 
 
             //var ghosts = (int)(Math.Min(18 + level * 2, 28) * 0.85);
-            var ghosts = (int)(Math.Min(18 + level * 2, 28) * 1.0);
+            var ghosts = (int)(Math.Min(18 + level * 2, 28) * 1.05);
             var i = 0;
             //while (i < 110)
             while (i < ghosts)
@@ -249,38 +296,77 @@ namespace CirnoGame
                 else
                 {
                     var spike = Math.Random() < 0.25;
-                    var T = new Turret(this);
-                    PlaceAndAddEnemy(T);
-                    T.SetDown(spike);
-                    if (spike)
+                    if (Math.Random() < 0.80)
                     {
-                        var TD = T.TTD;
-                        if (TD != null && TM.rows>TD.row+1)
+                        var T = new Turret(this);
+                        PlaceAndAddEnemy(T);
+                        T.SetDown(spike);
+                        if (spike)
                         {
-                            var TDD = TM.data[TD.column, TD.row + 1];
-                            if (TDD.enabled && TDD.solid)
+                            var TD = T.TTD;
+                            if (TD != null && TM.rows > TD.row + 1)
                             {
-                                T.Alive = false;
-
-                                TD.texture = 7;
-                                TD.Breakable = false;
-                                TD.CanSlope = false;
-                                TD.opaque = false;
-                                TD.SteppedOn = E =>
+                                var TDD = TM.data[TD.column, TD.row + 1];
+                                if (TDD.enabled && TDD.solid)
                                 {
-                                    var IC = E.As<PlayerCharacter>();
-                                    if (IC.blockprice > 0 && IC.invincibilitytime <= 0)
+                                    T.Alive = false;
+
+                                    TD.texture = 7;
+                                    TD.Breakable = false;
+                                    TD.CanSlope = false;
+                                    TD.opaque = false;
+                                    TD.SteppedOn = E =>
                                     {
-                                        IC.onDamaged(null, 1.5f+(level*1.5f));
-                                        IC.PlaySound("damaged");
-                                        if (IC.HP <= 0)
+                                        var IC = E.As<PlayerCharacter>();
+                                        if (IC.blockprice > 0 && IC.invincibilitytime <= 0)
                                         {
-                                            IC.onDeath(null);
+                                            IC.onDamaged(null, 1.5f + (level * 1.5f));
+                                            IC.PlaySound("damaged");
+                                            if (IC.HP <= 0)
+                                            {
+                                                IC.onDeath(null);
+                                            }
                                         }
-                                    }
-                                };
+                                    };
+                                }
                             }
                         }
+                    }
+                    else
+                    {
+                        var T2 = new ConveyorBelt(this);
+                        PlaceAndAddEnemy(T2);
+                        var tmp = new Vector2();
+                        tmp.CopyFrom(T2.Position);
+
+                        var extrabelts = 1;
+                        if (Math.Random() < 0.35)
+                        {
+                            extrabelts = 2;
+                            if (Math.Random() < 0.35)
+                            {
+                                extrabelts = 3;
+                            }
+                        }
+                        while (extrabelts > 0)
+                        {
+                            tmp.X += TM.tilesize;
+                            var TD = TM.CheckForTile(tmp);
+                            if (TD != null && TD.solid && TD.visible && TD.opaque)
+                            {
+                                extrabelts = 0;
+                            }
+                            else
+                            {
+                                var T3 = new ConveyorBelt(this);
+                                T3.Position = tmp;
+                                this.AddEntity(T3);
+                                AddEntity(T3);
+                                T3.SetDown();
+                            }
+                            extrabelts--;
+                        }
+                        T2.SetDown();
                     }
                 }
                 i++;
@@ -309,7 +395,7 @@ namespace CirnoGame
             {//attempt to prevent key from spawning too close
                 Helper.Log("Door key is too close, repositioning key...");
 
-               key.Position.CopyFrom(MapRoom.FindAnyEmptySpot());
+                key.Position.CopyFrom(MapRoom.FindAnyEmptySpot());
                 attempts += 1;
             }
             MapGenerator.keyroom = MapRoom.FindRoom(key.Position);
@@ -377,9 +463,20 @@ namespace CirnoGame
         }
         public bool muted = false;
         bool lastPauseButtonState = false;
+        int frame = 0;
+        public float fadein = 0;
         public override void Update()
         {
             base.Update();
+            frame++;
+            if (generator != null)
+            {
+                if (frame % 2 == 0)
+                {
+                    UpdateGenerator();
+                }
+                return;
+            }
             Teams = GamePlaySettings.GameMode.Teams;
             //if (playing && KeyboardManager._this.TappedButtons.Contains(13))
             if (playing && App.IC.getPressed(5) && !lastPauseButtonState)
@@ -401,6 +498,7 @@ namespace CirnoGame
             if (!paused)
             {
                 UpdateControls();
+                StatsSprite.Visible = false;
 
                 var i = 0;
                 while (i < entities.Count)
@@ -428,6 +526,24 @@ namespace CirnoGame
             else
             {
                 TimerSprite.Text = "Paused";
+                StatsSprite.Text = "Attack:" + player.attackpower + "  Defense:" + player.defensepower;
+                StatsSprite.Visible = true;
+            }
+        }
+        void UpdateGenerator()
+        {
+            if (generator.generated)
+            {
+                generator.finishGeneration();
+            }
+            else
+            {
+                generator.Generate();
+            }
+            if (generator.finished)
+            {
+                generator = null;
+                finalizeLevel();
             }
         }
         public void LevelRestart()
@@ -483,7 +599,23 @@ namespace CirnoGame
             {
                 TimerSprite.TextColor = "#FFFFFF";
             }
-            var totalseconds = timeRemaining / 1000f;
+            if (displayTimeRemaining < timeRemaining)
+            {
+                displayTimeRemaining += 150f;
+                if (displayTimeRemaining >= timeRemaining)
+                {
+                    displayTimeRemaining = timeRemaining;
+                }
+            }else if (displayTimeRemaining > timeRemaining)
+            {
+                displayTimeRemaining -= 150f;
+                if (displayTimeRemaining <= timeRemaining)
+                {
+                    displayTimeRemaining = timeRemaining;
+                }
+            }
+
+            var totalseconds = displayTimeRemaining / 1000f;
             var totalminutes = totalseconds / 60;
 
             var minutes = (int)Math.Floor(totalminutes);
@@ -640,6 +772,34 @@ namespace CirnoGame
                 }
             }
         }
+        /// <summary>
+        /// this attempts to balance out damage progression as offence and defence scales up.
+        /// this returns what damage should be the result of an attack value being dealt against a defense value.
+        /// </summary>
+        /// <param name="attack"></param>
+        /// <param name="defense"></param>
+        /// <returns></returns>
+        public float calcdamage(float attack,float defense)
+        {
+            //normalize(attack and defense change into values that represent the difference rather than an ever scaling mess)
+            if (attack > defense)
+            {
+                attack -= defense;
+                defense = 0;
+            }
+            else
+            {
+                defense -= attack;
+                attack = 0;
+            }
+            //reduce how quickly this scales.
+            float scaleslowdown = 2f;
+            attack += scaleslowdown;
+            defense += scaleslowdown;
+
+            //return resulting damage.
+            return (attack / defense);
+        }
         public void PlaySoundEffect(Vector2 source, string sound)
         {
             if (muted)
@@ -704,6 +864,16 @@ namespace CirnoGame
             base.Render();
 
             CanvasRenderingContext2D g = spriteGraphics;
+            if (generator != null)
+            {
+                g.GlobalAlpha = 0.125f;
+                g.FillStyle = "#000000";
+                g.FillRect(0, 0, spriteBuffer.Width, spriteBuffer.Height);
+                g.GlobalAlpha = 1f;
+
+                g = EG;
+                return;
+            }
             if (skiprender)
             {
                 g = EG;
@@ -740,7 +910,15 @@ namespace CirnoGame
                     ScoreSprite.Draw(g);
                 }
             }
+            if (fadein > 0)
+            {
+                g.GlobalAlpha = fadein;
+                g.FillStyle = "#000000";
+                g.FillRect(0, 0, spriteBuffer.Width, spriteBuffer.Height);
+                g.GlobalAlpha = 1f;
 
+                fadein -=0.25f;
+            }
         }
         public void Start()
         {
@@ -757,6 +935,7 @@ namespace CirnoGame
 
             totalTime = 0;
             timeRemaining = defaultTimeRemaining;
+            displayTimeRemaining = timeRemaining;
             //timeRemaining *= 0.3334f * 0.25f;
             /*timeRemaining *= 0.3334f * 0.05f;
             player.HP = 5;*/
@@ -776,10 +955,31 @@ namespace CirnoGame
                 M.Play();
             }
         }
+
+        /// <summary>
+        /// a mirrored/reversing modulous used to convert a linear incrementor into a fade-in + fade-out styled modulus calculation.
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="max"> the highest possible value that can be returned</param>
+        /// <returns>returns a number between 0 and max</returns>
+        public static int pulse(int value,int max)
+        {
+            /*value = value % (max * 2);
+            if (value > max)
+            {
+                value = max - (value - max);
+            }
+            return value;*/
+
+            return Math.Abs((value % (max * 2))-max);
+        }
         public void RenderGUI(CanvasRenderingContext2D g)
         {
             var PC = (PlayerCharacter)player;
             var color = "#00DD00";
+            var border = "#000000";
+            var borderalpha = 0.6f;
+
             if (timeRemaining < baseLifeCost)
             {
                 if (timeRemaining <= 0)
@@ -790,13 +990,30 @@ namespace CirnoGame
                 {
                     color = "#FF0000";
                 }
+                if (PC.HP<= (PC.maxHP / 2))
+                {
+                    /*var pulse = ((int)totalTime) % 188;
+                    if (pulse > 99)
+                    {
+                        pulse = 99 - pulse;
+                    }*/
+                    var N = pulse((int)(totalTime / 1.7f), 180);
+                    
+                    borderalpha += N / (180f / 4);
+
+                    var val = N.ToString("X2").PadRight(6,'0');
+                    border = ("#" +val);
+                }
             }
+            
 
             g.GlobalAlpha = 0.8f;
-            DrawGauge(g, new Vector2(0, 0), new Vector2(spriteBuffer.Width / 4, spriteBuffer.Height / 20), 5, PC.HP / PC.maxHP, color);
+            DrawGauge(g, new Vector2(0, 0), new Vector2(spriteBuffer.Width / 4, spriteBuffer.Height / 20), 5, PC.HP / PC.maxHP, color,true,border,borderalpha);
+
             g.GlobalAlpha = 1;
 
             TimerSprite.Draw(g);
+            StatsSprite.Draw(g);
             ScoreSprite.Text = "Level:" + level + " Score:" + player.score;
             ScoreSprite.ForceUpdate();
             ScoreSprite.Position.X = (spriteBuffer.Width * 0.98f) - ScoreSprite.spriteBuffer.Width;
@@ -834,13 +1051,13 @@ namespace CirnoGame
             }
             g.GlobalAlpha = 1f;
         }
-        public void DrawGauge(CanvasRenderingContext2D g, Vector2 position, Vector2 size, int border, float progress, string color, bool drawborder = true)
+        public void DrawGauge(CanvasRenderingContext2D g, Vector2 position, Vector2 size, int border, float progress, string color, bool drawborder = true, string bordercolor= "#000000",float borderalpha=0.6f)
         {
             var alpha = g.GlobalAlpha;
             if (drawborder)
             {
-                g.GlobalAlpha = 0.6f * alpha;
-                g.FillStyle = "#000000";
+                g.GlobalAlpha = borderalpha * alpha;
+                g.FillStyle = bordercolor;
 
                 g.FillRect((int)position.X, (int)position.Y, (int)size.X, (int)size.Y);
             }

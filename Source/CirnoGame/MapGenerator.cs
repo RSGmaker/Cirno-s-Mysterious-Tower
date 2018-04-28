@@ -11,7 +11,8 @@ namespace CirnoGame
         public static MapRoom rootroom;
         public static MapRoom doorroom;
         public static MapRoom keyroom;
-        public static void Generate(Game game)
+        //old method
+        /*public static void Generate(Game game)
         {
             var player = game.player;//player character
             var map = game.TM;//the tilemap to generate
@@ -49,8 +50,156 @@ namespace CirnoGame
             {
                 Helper.Log("cannot locate a spawn point...");
             }
+        }*/
+        public Game game;
+        bool started = false;
+        MapRoom root;
+        int roomtotal;
+        public bool generated = false;
+        public bool finished = false;
+        int attempts = 0;
+        public void Generate(int rooms=1)
+        {
+            if (generated)
+            {
+                return;
+            }
+            //var player = game.player;//player character
+            var map = game.TM;//the tilemap to generate
+            var bounds = game.stageBounds;//the bounds to stay within
+            
+
+            var SX = map.columns / 2;
+            var SY = map.rows / 3;
+            if (!started)
+            {
+                Helper.Log("started boxy generate");
+
+                root = new MapRoom();
+                root.SX = SX;
+                root.SY = SY;
+                root.EX = SX + 6 + (int)(Math.Random() * 10);
+                root.EY = SY + 6 + (int)(Math.Random() * 10);
+
+                root.game = game;
+                rootroom = root;
+
+                MapRoom.PlacedRooms = new List<MapRoom>();
+                MapRoom.OpenRooms = new List<MapRoom>();
+
+                var roomMinimum = 10 + Math.Min(game.level, 4);
+                roomtotal = roomMinimum + (int)(Math.Random() * (roomMinimum));
+
+                if (!root.PlaceAndExpand())
+                {
+                    Helper.Log("Couldn't generate root room.");
+                    generated = true;
+                    return;
+                }
+                attempts = 400;
+
+                started = true;
+            }
+
+            //var roomtotal = 12+(int)(Math.Random() * 10);
+            //var roomtotal = 16 + (int)(Math.Random() * 16);
+
+            //var roomMinimum = 16;
+            
+            //var rooms = 0;
+
+            var R = root;
+
+            //while (MapRoom.OpenRooms.Count < roomtotal && attempts > 0)
+            if (MapRoom.OpenRooms.Count < roomtotal && attempts > 0)
+            {
+                //number of rooms to attempt to do per 
+                while (rooms > 0 && (MapRoom.OpenRooms.Count < roomtotal && attempts > 0))
+                {
+                    var L = MapRoom.FindValidUnplacedRooms().Pick();
+                    if (L.PlaceAndExpand())
+                    {
+                        //rooms++;
+                    }
+                    attempts--;
+                    rooms--;
+                }
+            }
+            else
+            {
+                //finishGeneration();
+                generated = true;
+                Helper.Log("basic generation completed");
+            }
         }
-        public static void BoxyGenerate(Game game)
+        public void finishGeneration()
+        {
+            if (!generated)
+            {
+                Helper.Log("finishgeneration() was called before basic generation was completed, aborting...");
+                return;
+            }
+            var player = game.player;//player character
+
+            var RR = game.stageBounds - game.TM.position;
+            RR.width -= game.TM.tilesize;
+            RR.height -= game.TM.tilesize;
+            game.TM.DrawRect(RR);
+            game.TM.ApplyBreakable();
+            var secrets = Math.Random() < 0.3 ? 1 : 0;
+            if (secrets > 0 && Math.Random() < 0.3)
+            {
+                secrets++;
+            }
+            while (secrets > 0)
+            {
+                var L = MapRoom.FindValidUnplacedRooms().Pick();
+                if (L.PlaceAndExpand())
+                {
+                    L.MakeSecret();
+                    var lever = AttemptCreateLever(game, L);
+                    game.AddEntity(lever);
+                    Helper.Log("Placed secret room at:" + L.SX + "," + L.SY);
+                }
+                secrets--;
+            }
+            var V = FindEmptySpace(game);
+            keyroom = null;
+            if (V != null)
+            {
+                game.Door.Position.CopyFrom(V);
+                game.Door.DropToGround();
+                doorroom = MapRoom.FindRoom(game.Door.Position);
+                if (doorroom == null)
+                {
+                    Helper.Log("Door room could not be determined...");
+                }
+
+                var PC = (PlayerCharacter)player;
+                //PC.MoveToNewSpawn(V);
+                PC.MoveToNewSpawn(game.Door.Position);
+                Helper.Log("spawning at:" + (int)V.X + "," + (int)V.Y);
+            }
+            else
+            {
+                Helper.Log("cannot locate a spawn point...");
+            }
+            finished = true;
+        }
+        public void forceGeneration()
+        {
+            if (finished)
+            {
+                Helper.Log("cant force generate, an already generated map.");
+                return;
+            }
+            if (!generated)
+            {
+                Generate(attempts+1);
+            }
+            finishGeneration();
+        }
+        /*public static void BoxyGenerate(Game game)
         {
             Helper.Log("boxy generate");
             var player = game.player;//player character
@@ -120,8 +269,6 @@ namespace CirnoGame
             keyroom = null;
             if (V != null)
             {
-                /*player.x = V.X;
-                player.y = V.Y;*/
                 game.Door.Position.CopyFrom(V);
                 game.Door.DropToGround();
                 doorroom = MapRoom.FindRoom(game.Door.Position);
@@ -140,7 +287,7 @@ namespace CirnoGame
                 Helper.Log("cannot locate a spawn point...");
             }
 
-        }
+        }*/
         public static RoomOpeningLever AttemptCreateLever(Game game,MapRoom Target)
         {
             var i = 0;

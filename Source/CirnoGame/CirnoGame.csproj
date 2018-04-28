@@ -51,6 +51,7 @@
     <Compile Include="Chest.cs" />
     <Compile Include="CollectableItem.cs" />
     <Compile Include="ControllableEntity.cs" />
+    <Compile Include="ConveyorBelt.cs" />
     <Compile Include="DoorKey.cs" />
     <Compile Include="Enemies\MRGhosty.cs" />
     <Compile Include="Enemies\Turret.cs" />

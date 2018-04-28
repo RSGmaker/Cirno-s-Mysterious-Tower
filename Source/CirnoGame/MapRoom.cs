@@ -76,14 +76,26 @@ namespace CirnoGame
 
             //min += 1;
             min -= 1;
-            max -= 3;
+            max -= 4;
             dif = (max - min);
             int H = (int)(min + (Math.Random() * dif));
 
             var X = -1;
             var Y = -1;
+
+            //var maxstagger = (int)(min / 2);
+            //make safely editable bounds that allow more easily staggered room placement.
+            var SX = this.SX;
+            var SY = this.SY;
+
+            var EX = this.EX;
+            var EY = this.EY;
             if (Xdir != 0)
             {
+                //SY -= maxstagger;
+                //EY += maxstagger;
+                SY -= H-2;
+
                 Y = (int)(SY + (Math.Random() * (EY - SY)));
                 if (Xdir < 0)
                 {
@@ -96,6 +108,10 @@ namespace CirnoGame
             }
             else if (Ydir != 0)
             {
+                SX -= W - 2;
+                //SX -= maxstagger;
+                //EX += maxstagger;
+
                 X = (int)(SX + Math.Random() * ((EX - SX)));
                 if (Ydir < 0)
                 {
@@ -287,9 +303,68 @@ namespace CirnoGame
             TM.ClearRect(SX, SY, EX - SX, EY - SY);
             TM._GenRect(SX, SY, EX, EY);
 
+            BridgeToParent();
+
             PlacedRooms.Add(this);
             OpenRooms.Add(this);
             placed = true;
+        }
+        private void BridgeToParent()
+        {
+            var X = 0;
+            var Y = 0;
+            if (parent == null || !parent.placed)
+            {
+                return;
+            }
+            if (EX < parent.SX)
+            {
+                X = -1;
+            }
+            else if (SX > parent.EX)
+            {
+                X = 1;
+            }else if (EY < parent.SY)
+            {
+                Y = -1;
+            }
+            else if (SY > parent.EY)
+            {
+                Y = 1;
+            }
+            else
+            {
+                return;
+            }
+            int LX = 0;
+            int LY = 0;
+            int W = 0;
+            int H = 0;
+            if (Y != 0)
+            {
+                int[] BX = {Math.Max(SX,parent.SX), Math.Min(EX, parent.EX) };
+                W = Math.Random()<0.5 ? 1 : 2;
+                int range = (BX[1] - BX[0])-(W-1);
+                LX = BX[0] + (int)(Math.Random() * range);
+
+                LY = Y < 0 ? EY - 2 : SY + 2;
+                H = 5;
+            }
+            else
+            {
+                int[] BY = { Math.Max(SY, parent.SY), Math.Min(EY, parent.EY) };
+                H = Math.Random() < 0.5 ? 1 : 2;
+                int range = (BY[1] - BY[0]) - (H - 1);
+                LY = BY[0] + (int)(Math.Random() * range);
+
+                LX = X < 0 ? EX - 2 : SX + 2;
+                W = 5;
+
+            }
+
+            var TM = game.TM;
+
+            TM.ClearRect(LX, LY, W, H);
         }
         public void ApplyBreakable()
         {

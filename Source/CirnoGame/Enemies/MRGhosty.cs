@@ -61,8 +61,8 @@ namespace CirnoGame
             ChangeAni("");
             AddBehavior(new FlightControls(this));
             AddBehavior(new RandomAI(this));
-            attackpower = 1 + (Game.level * 0.5f);
-            defensepower = 1 + (Game.level * 0.5f);
+            attackpower = 1 + (Game.level * 0.55f);
+            defensepower = 1 + (Game.level * 0.55f);
             if (Game.playing)
             {
                 AddBehavior<AimedShooter>();
@@ -104,7 +104,8 @@ namespace CirnoGame
             //throw new NotImplementedException();
             //if (!(source is MRGhosty))
             {
-                HP -= (amount / defensepower);
+                //HP -= (amount / defensepower);
+                HP -= Game.calcdamage(amount, defensepower);
             }
             /*else
             {

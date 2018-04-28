@@ -37,7 +37,7 @@ namespace CirnoGame
             Vector2 C;
             var player = Game.player;
 
-            if (collectionDelay <= 0 && CanCollect(player) && ((C = player.getCenter()).EstimatedDistance(Position) < magnetDistance))
+            if (collectionDelay <= 0 && player.HP>0 && CanCollect(player) && ((C = player.getCenter()).EstimatedDistance(Position) < magnetDistance))
             {
                 var C2 = getCenter();
                 var P = C - C2;

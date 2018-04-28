@@ -12,10 +12,25 @@ namespace CirnoGame
         {
             Ani = new Animation(AnimationLoader._this.GetAnimation("images/misc/chest"));
             Ani.ImageSpeed = 0;
-            if (Math.Random() < 0.15)
+            if (Math.Random() < 0.20)
             {
                 Heartify();
             }
+            else if (Math.Random() < 0.05)
+            {
+                Premiumify();
+            }
+        }
+        public void Premiumify()
+        {
+            var P = Ani.Position;
+            Ani = new Animation(AnimationLoader._this.GetAnimation("images/misc/premiumchest"));
+            Ani.ImageSpeed = 0;
+            Ani.Position.CopyFrom(P);
+            KeysNeeded = 2;
+            Premium = true;
+            Golden = false;
+            Heart = false;
         }
         public void Goldify()
         {
@@ -23,7 +38,9 @@ namespace CirnoGame
             Ani = new Animation(AnimationLoader._this.GetAnimation("images/misc/goldchest"));
             Ani.ImageSpeed = 0;
             Ani.Position.CopyFrom(P);
+            KeysNeeded = 0;
             Golden = true;
+            Premium = false;
             Heart = false;
         }
         public void Heartify()
@@ -33,8 +50,11 @@ namespace CirnoGame
             Ani.ImageSpeed = 0;
             Ani.Position.CopyFrom(P);
             Heart = true;
+            Premium = false;
         }
+        public int KeysNeeded = 1;
         public bool ForceLocked = false;
+        public bool Premium { get; private set; }
         public bool Golden { get; private set; }
         public bool Opened { get; private set; }
         public bool Heart { get; private set; }
@@ -56,11 +76,11 @@ namespace CirnoGame
             {
                 if (!ForceLocked)
                 {
-                    if (!Opened && P.Controller[2] && (P.keys > 0 || Golden))
+                    if (!Opened && P.Controller[2] && (P.keys >= KeysNeeded/* || Golden*/))
                     {
-                        if (!Golden)
+                        //if (!Golden)
                         {
-                            P.keys--;
+                            P.keys -= KeysNeeded;
                         }
                         Open(P);
                     }
@@ -89,7 +109,8 @@ namespace CirnoGame
                 string[] picker = null;
                 while (ok)
                 {
-                    var common = new string[] { "point", "point", "point", "point", "point", "point", "heart", "heart", "tripleheart", "singleorb" };
+                    //var common = new string[] { "point", "point", "point", "point", "point", "point", "heart", "heart", "tripleheart", "singleorb" };
+                    var common = new string[] { "point", "point", "point", "point", "point", "point", "tripleheart"/*, "singleorb"*/ };
                     var rare = new string[] { "attackpower", "defensepower", "mining" };
                     var legendary = new string[] { "triplejump", "cheaperblocks", "invincibility", "repeater","movespeed" };
 
@@ -108,7 +129,17 @@ namespace CirnoGame
                     {
                         if (picker == null || Math.Random() < 0.20)
                         {
-                            if (R < 0.60 && !Golden)
+                            //if (R < 0.60 && !Golden && !Premium)
+                            var commonchance = 0.65-(Game.level*0.25);
+                            /*if (Game.level > 5)
+                            {
+                                commonchance *= 0.8;
+                                if (Game.level > 10)
+                                {
+                                    commonchance *= 0.8;
+                                }
+                            }*/
+                            if (R < commonchance && !Golden && !Premium)
                             {
                                 picker = common;
                                 S = "common";
@@ -117,6 +148,10 @@ namespace CirnoGame
                             else
                             {
                                 R = Math.Random();
+                                if (Premium)
+                                {
+                                    R += 0.04;//adds a 4% to the chance of a legendary power up.
+                                }
                                 if (R < 0.91)
                                 {
                                     picker = rare;
@@ -284,7 +319,7 @@ namespace CirnoGame
                             M = "Triple Jump";
                             break;
                         case "cheaperblocks":
-                            if (player.blockprice != 4)
+                            if (player.blockprice != 3)
                             {
                                 ok = true;
                                 break;

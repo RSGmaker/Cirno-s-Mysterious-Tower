@@ -8,7 +8,8 @@ namespace CirnoGame
 {
     class HealingItem : CollectableItem
     {
-        public float healingPower = 1.5f;
+        //public float healingPower = 1.5f;
+        public float healingPower = 2.5f;
         public HealingItem(Game game) : base(game, "heart")
         {
             floats = false;

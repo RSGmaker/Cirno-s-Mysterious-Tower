@@ -65,11 +65,16 @@ namespace CirnoGame
                     Floor = null;
                 }
                 else*/
+                if (true/*y>=Y*/)
                 {
                     //y = ((Floor.row * Game.TM.tilesize) + Game.TM.position.Y) - feetposition;
                     y = Y;
                     Vspeed = 0;
                     onGround = true;
+                }
+                else
+                {
+                    Floor = null;
                 }
             }
             if (Ceiling != null && Vspeed < 0/* && !Ceiling.platform*/)
@@ -226,12 +231,15 @@ namespace CirnoGame
                 //if (!Floor.platform || y+Vspeed>=Y)
                 if ((!Floor.platform || y <= Y + Vspeed) && y + (Vspeed + 10) >= Y)
                 {
-                    if (Vspeed > 0)
+                    //if (y >= Y)
                     {
-                        Vspeed = 0;
-                        onGround = true;
+                        if (Vspeed > 0)
+                        {
+                            Vspeed = 0;
+                            onGround = true;
+                        }
+                        y = Y;
                     }
-                    y = Y;
                 }
             }
             if (Hspeed != 0)

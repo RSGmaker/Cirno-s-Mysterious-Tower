@@ -18,7 +18,7 @@ namespace CirnoGame
         public int score = 0;
         public int orbs = 0;
         public int keys = 0;
-        public float energyRecharge = 0.022f;
+        public float energyRecharge = 0.026f;
         public float maxEnergy = 4;
         public float energy = 4;
 
@@ -36,7 +36,7 @@ namespace CirnoGame
         public float defensepower = 1f;
 
         public float invincibilitytime = 0;
-        public float blockprice = 4f;
+        public float blockprice = 3f;
 
         public float invincibilitymod = 1f;
 
@@ -160,6 +160,7 @@ namespace CirnoGame
             base.Update();
             MSG.Position.X = Position.X;
             MSG.Position.Y = Position.Y-10;
+            
 
             if (shoottime > 0)
             {
@@ -260,6 +261,22 @@ namespace CirnoGame
             {
                 Visible = true;
             }
+            
+            if (HP < 10)
+            {
+                Ani.Alpha = (Game.pulse(frame,50)/50f)+ 0.15f+(HP * 0.1f);
+
+                Ani.HueRecolorStrength = 0.4f;
+                Ani.HueColor = Ani.Alpha<0.85f ? "#CC0000" : "";
+
+                //Ani.HueRecolorStrength = 1-Math.Min((Game.pulse(frame, 60) / 60f) + 0.2f + (HP * 0.1f),1);
+                //Ani.HueColor = "#FF0000";
+            }
+            else
+            {
+                Ani.Alpha = 1;
+                Ani.HueColor = "";
+            }
             //if (Game.timeRemaining > 0 && HP>0 && invincibilitytime<=0 && HP<maxHP && Game.timeRemaining < Game.defaultTimeRemaining)
             /*if (Game.timeRemaining > 0 && HP > 0 && invincibilitytime <= 0 && HP < maxHP && Game.timeRemaining < Game.lastStand)
             {
@@ -274,7 +291,7 @@ namespace CirnoGame
                 }
             }*/
 
-            
+
             frame++;
         }
         public void PlaceBlock()
@@ -293,6 +310,7 @@ namespace CirnoGame
                 T.Breakable = true;
                 T.enabled = true;
                 T.texture = 4;
+                T.CanSlope = false;
                 T.UpdateTile();
                 T.HP = T.maxHP * 2;
                 Game.timeRemaining -= price;
@@ -349,7 +367,8 @@ namespace CirnoGame
             //throw new NotImplementedException();
             if (invincibilitytime <= 0)
             {
-                HP -= (amount / defensepower);
+                //HP -= (amount / defensepower);
+                HP -= Game.calcdamage(amount, defensepower);
                 invincibilitytime = 50*invincibilitymod;
             }
         }

@@ -87,6 +87,8 @@ namespace CirnoGame
                 Opened = false;
                 P.score += (Game.level * 10);
 
+                new HealingItem(Game).onCollected(P);//simulate effect of healing with 1 heart.
+
                 var time = (1000) * 13;
                 if (Game.timeRemaining > 0)
                 {

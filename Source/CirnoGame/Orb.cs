@@ -12,11 +12,13 @@ namespace CirnoGame
         {
             //Ani = new Animation(AnimationLoader.Get("images/misc/orb"));
             magnetDistance = 55;
+            sound = "timeorb";
         }
         public override void onCollected(PlayerCharacter player)
         {
             //throw new NotImplementedException();
             var time = (1000) * (13 - Math.Min(Game.level-1 * 0.15f,7));
+            time += 250;//add quarter of a second
             if (Game.timeRemaining > 0)
             {
                 Game.timeRemaining += time;

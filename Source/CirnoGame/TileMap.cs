@@ -350,7 +350,8 @@ namespace CirnoGame
                         }
                         else*/
                         {
-                            if (RNDbridge < 1 && RND.NextDouble() < 0.030)
+                            //if (RNDbridge < 1 && RND.NextDouble() < 0.030)
+                            if (RNDbridge < 1 && RND.NextDouble() < 0.034)
                             {
                                 //RNDbridge = RND.Next(8);
                                 RNDbridge = 2+RND.Next(4);
@@ -942,7 +943,14 @@ namespace CirnoGame
                                 }
                                 else if (doorroom!=null)
                                 {
-                                    var Dist = Math.Max(Math.Abs(column - DX) + Math.Abs(row - DY) - 5, 0);
+                                    var AD = 5;
+                                    var ADist = Math.Min(Math.Abs(column - DX), Math.Abs(row - DY));
+                                    if (ADist < 5)
+                                    {
+                                        AD += (5 - ADist)*1;
+                                    }
+                                    var Dist = Math.Max(Math.Abs(column - DX) + Math.Abs(row - DY) - AD, 0);
+                                    
                                     var A = 0.5f - (Dist * 0.03f);
                                     var G = gradcolor;
                                     if (A < 0)
@@ -996,7 +1004,14 @@ namespace CirnoGame
                                 }
                                 else if (doorroom != null)
                                 {
-                                    var Dist = Math.Max(Math.Abs(column - DX) + Math.Abs(row - DY) - 5, 0);
+                                    var AD = 5;
+                                    var ADist = Math.Min(Math.Abs(column - DX), Math.Abs(row - DY));
+                                    if (ADist < 5)
+                                    {
+                                        AD += (5 - ADist) * 1;
+                                    }
+                                    var Dist = Math.Max(Math.Abs(column - DX) + Math.Abs(row - DY) - AD, 0);
+
                                     var A = 0.5f - (Dist * 0.03f);
                                     var G = gradcolor;
                                     if (A < 0)
@@ -1059,7 +1074,14 @@ namespace CirnoGame
                             }
                             else if (doorroom != null)
                             {
-                                var Dist = Math.Max(Math.Abs(column - DX) + Math.Abs(row - DY)-5,0);
+                                var AD = 5;
+                                var ADist = Math.Min(Math.Abs(column - DX), Math.Abs(row - DY));
+                                if (ADist < 5)
+                                {
+                                    AD += (5 - ADist) * 1;
+                                }
+                                var Dist = Math.Max(Math.Abs(column - DX) + Math.Abs(row - DY) - AD, 0);
+
                                 var A = 0.5f - (Dist * 0.03f);
                                 var G = gradcolor;
                                 if (A < 0)
